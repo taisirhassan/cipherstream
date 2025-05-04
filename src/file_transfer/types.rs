@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::time::SystemTime;
 
 /// Information about a file available for transfer
@@ -34,23 +33,50 @@ pub struct TransferProgress {
 }
 
 /// File transfer request messages for the protocol
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, bincode::Encode, bincode::Decode)]
 pub enum ProtocolRequest {
-    /// Request containing file info and data
-    FileData {
+    /// Initial handshake request to initiate a file transfer
+    HandshakeRequest {
         filename: String,
+        filesize: u64,
         encrypted: bool,
+        transfer_id: String,
+    },
+    /// File data chunk request
+    FileChunk {
+        transfer_id: String,
+        chunk_index: u64,
+        total_chunks: u64,
         data: Vec<u8>,
+        is_last: bool,
+    },
+    /// Request to cancel a transfer
+    CancelTransfer {
+        transfer_id: String,
     },
 }
 
 /// File transfer response messages for the protocol
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, bincode::Encode, bincode::Decode)]
 pub enum ProtocolResponse {
-    /// Simple acknowledgment of receipt
-    FileReceived { 
+    /// Response to the handshake
+    HandshakeResponse {
+        accepted: bool,
+        reason: Option<String>,
+        transfer_id: Option<String>,
+    },
+    /// Response to a file chunk
+    ChunkResponse {
+        transfer_id: String,
+        chunk_index: u64,
+        success: bool,
+        error: Option<String>,
+    },
+    /// Response to a transfer completion
+    TransferComplete {
+        transfer_id: String,
         success: bool, 
-        error: Option<String> 
+        error: Option<String>,
     },
 }
 

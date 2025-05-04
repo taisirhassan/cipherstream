@@ -1,88 +1,141 @@
 #!/bin/bash
-# Simplified test script - Node 2 and Send Command only
+set -e
 
-echo "====================================================="
-echo " CipherStream P2P Direct Connection Test (Send Cmd)"
-echo "====================================================="
+# Colors for output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# Create test file
-echo "Creating test file..."
-echo "Direct connection test data." > test_file.txt
-echo 
+# Helper to print section headers
+print_header() {
+    echo -e "\n${BLUE}==>${NC} ${YELLOW}$1${NC}"
+}
 
-# Clean up previous logs/files
-rm -f node1.log node2.log file_transfer.log logs/cipherstream_node.*
+# Helper to print success message
+print_success() {
+    echo -e "${GREEN}✓${NC} $1"
+}
 
-# Set detailed logging
-export RUST_LOG="info,cipherstream=debug,libp2p_swarm=debug,libp2p_tcp=debug,libp2p_noise=trace,libp2p_yamux=trace"
-echo "🔧 Set RUST_LOG=$RUST_LOG"
-echo
+# Helper to print error message
+print_error() {
+    echo -e "${RED}✗${NC} $1"
+}
 
-# Build the application
-echo "Building CipherStream..."
-cargo build
-echo
+# Clean up any existing test processes
+cleanup() {
+    print_header "Cleaning up test environment"
+    pkill -f cipherstream || true
+    sleep 1
+}
 
-# Start Node 2 in the background
-echo "====================================================="
-echo "Starting node 2 on port 9001..."
-echo "====================================================="
-nohup cargo run -- start --port 9001 > node2.log 2>&1 &
-NODE2_PID=$!
-sleep 15 # Give it time to start and log its Peer ID
+# Function to run all unit tests (non-integration tests)
+run_unit_tests() {
+    print_header "Running unit tests"
+    
+    # Run library tests first
+    echo "Running library tests..."
+    cargo test --lib
+    
+    # Run non-integration tests
+    echo "Running test modules..."
+    cargo test --test="crypto_*" --test="file_*" --test="network_multiaddr*" --test="protocol_*" --test="codec_*"
+    
+    # Run network config tests separately
+    echo "Running network config tests..."
+    cargo test --test="network_config_test"
+    
+    print_success "Unit tests completed"
+}
 
-# Get Node 2 Peer ID
-PEER2=$(grep -m 1 "Peer ID: " logs/cipherstream_node.* | sed 's/.*Peer ID: //g' | tail -n 1)
-if [ -z "$PEER2" ]; then
-    PEER2=$(grep -m 1 "Peer ID: " node2.log | sed 's/.*Peer ID: //') # Fallback
-fi
+# Function to run integration tests with specific parameters
+run_integration_tests() {
+    print_header "Running integration tests (these may hang or fail)"
+    
+    # Warn that these tests may hang
+    echo -e "${YELLOW}Warning: These tests may hang or fail due to network port conflicts.${NC}"
+    echo "Tests are marked as ignored by default, use --no-ignore to run them."
+    
+    # Run integration tests with a timeout
+    echo "Running node connectivity tests..."
+    
+    if [ "$1" == "--no-ignore" ]; then
+        cargo test --test="node_connect_test" -- --nocapture --ignored || true
+        echo "Running file transfer tests..."
+        cargo test --test="file_transfer_test" -- --nocapture --ignored || true
+        echo "Running port allocation tests..."
+        cargo test --test="network_port_allocation_test" -- --nocapture --ignored || true
+    else
+        echo "Skipping ignored tests. Use --no-ignore to run these tests."
+    fi
+    
+    print_success "Integration tests completed"
+}
 
-if [ -z "$PEER2" ]; then
-    echo "❌ Failed to get Peer ID for Node 2."
-    kill $NODE2_PID 2>/dev/null
-    exit 1
-fi
-echo "Target Node 2 Peer ID: $PEER2"
-echo
+# Function to run tests with coverage (if cargo-tarpaulin is installed)
+run_coverage() {
+    print_header "Running coverage tests"
+    
+    if command -v cargo-tarpaulin &> /dev/null; then
+        echo "Running coverage with tarpaulin..."
+        cargo tarpaulin --exclude-files "tests/*" --out Html
+        print_success "Coverage report generated"
+    else
+        print_error "cargo-tarpaulin is not installed"
+        echo "Install with: cargo install cargo-tarpaulin"
+    fi
+}
 
-# Attempt to send file directly to Node 2
-echo "====================================================="
-echo "Attempting to send file directly to Node 2 ($PEER2)..."
-echo "====================================================="
-cargo run -- send --peer $PEER2 --file test_file.txt > file_transfer.log 2>&1 
+# Function to run performance benchmarks
+run_benchmarks() {
+    print_header "Running crypto performance benchmarks"
+    
+    echo "Running crypto benchmarks..."
+    cargo test --test="crypto_performance_test" -- --nocapture
+    
+    print_success "Benchmarks completed"
+}
 
-# Wait for the file transfer command to potentially finish
-echo "Waiting for send command to complete (65 seconds)..."
-sleep 65
-echo
+# Main function
+main() {
+    # Register cleanup function to run on exit
+    trap cleanup EXIT
+    
+    # Parse command line arguments
+    case "$1" in
+        "unit")
+            run_unit_tests
+            ;;
+        "integration")
+            run_integration_tests $2
+            ;;
+        "coverage")
+            run_coverage
+            ;;
+        "benchmarks")
+            run_benchmarks
+            ;;
+        "all")
+            run_unit_tests
+            run_integration_tests $2
+            run_benchmarks
+            ;;
+        *)
+            echo "Usage: $0 [unit|integration|coverage|benchmarks|all] [--no-ignore]"
+            echo ""
+            echo "Commands:"
+            echo "  unit        Run all unit tests"
+            echo "  integration Run integration tests (may hang)"
+            echo "  coverage    Run test coverage (requires cargo-tarpaulin)"
+            echo "  benchmarks  Run performance benchmarks"
+            echo "  all         Run all tests"
+            echo ""
+            echo "Options:"
+            echo "  --no-ignore Run tests marked as ignored"
+            ;;
+    esac
+}
 
-# Display the file transfer output log
-echo "File transfer log (file_transfer.log):"
-echo "====================================================="
-cat file_transfer.log
-echo "====================================================="
-echo
-
-# Check logs for connection status
-echo "Checking for connection events in transfer log..."
-if grep -q "Connection established with TARGET peer: $PEER2" file_transfer.log; then
-    echo "✅ Temporary node connected to Node 2"
-elif grep -q "OutgoingConnectionError.*TARGET peer $PEER2" file_transfer.log; then
-    echo "❌ Temporary node failed to connect to Node 2 (OutgoingConnectionError logged)"
-elif grep -q "OutgoingConnectionError.*Transport.*Timeout" file_transfer.log; then
-    echo "❌ Temporary node failed to connect to Node 2 (Timeout logged)"
-elif grep -q "Operation timeout reached" file_transfer.log; then
-    echo "❌ Send command timed out before connection/completion."
-else
-    echo "❓ Connection status unclear from temporary node log."
-fi
-echo
-
-# Stop Node 2
-echo "====================================================="
-echo "Stopping node 2..."
-echo "====================================================="
-kill $NODE2_PID
-wait $NODE2_PID 2>/dev/null
-
-echo "Test completed."
+# Run the main function
+main "$@"

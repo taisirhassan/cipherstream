@@ -54,7 +54,7 @@ pub struct Behavior {
     pub kad: kad::Behaviour<kad::store::MemoryStore>,
     pub mdns: mdns::tokio::Behaviour,
     pub ping: ping::Behaviour,
-    pub file_transfer: request_handler::Behaviour<request_handler::FileTransferCodec>,
+    pub handshake: request_handler::Behaviour<request_handler::FileTransferCodec>,
 }
 
 /// Events emitted by the network behavior
@@ -63,7 +63,7 @@ pub enum BehaviorEvent {
     Mdns(mdns::Event),
     Kad(kad::Event),
     KeepAlive(ping::Event),
-    FileTransfer(request_handler::Event<crate::file_transfer::types::ProtocolRequest, crate::file_transfer::types::ProtocolResponse>),
+    Handshake(request_handler::Event<crate::file_transfer::types::ProtocolRequest, crate::file_transfer::types::ProtocolResponse>),
 }
 
 impl From<mdns::Event> for BehaviorEvent {
@@ -86,7 +86,7 @@ impl From<ping::Event> for BehaviorEvent {
 
 impl From<request_handler::Event<crate::file_transfer::types::ProtocolRequest, crate::file_transfer::types::ProtocolResponse>> for BehaviorEvent {
     fn from(event: request_handler::Event<crate::file_transfer::types::ProtocolRequest, crate::file_transfer::types::ProtocolResponse>) -> Self {
-        BehaviorEvent::FileTransfer(event)
+        BehaviorEvent::Handshake(event)
     }
 }
 
@@ -95,6 +95,8 @@ pub fn create_behavior(
     local_peer_id: PeerId,
     _local_key: identity::Keypair,
 ) -> Result<Behavior, Box<dyn std::error::Error>> {
+    // use libp2p::stream; // Remove this line
+
     // Create Kademlia behavior for DHT
     let store = kad::store::MemoryStore::new(local_peer_id.clone());
     
@@ -114,7 +116,8 @@ pub fn create_behavior(
         kad: kad_behavior,
         mdns: mdns_behavior,
         ping: ping_behavior,
-        file_transfer: file_transfer_behavior,
+        handshake: file_transfer_behavior,
+        // stream: stream::Behaviour::new(),  // Remove stream behavior initialization
     })
 }
 
@@ -188,6 +191,35 @@ pub fn mark_peer_disconnected(peer_id: &PeerId) {
 pub fn is_peer_connected(peer_id: &PeerId) -> bool {
     let connected = CONNECTED_PEERS.lock().unwrap();
     connected.contains(peer_id)
+}
+
+/// Build a swarm with the network behavior
+pub fn build_swarm<T>(
+    local_peer_id: PeerId,
+    local_key: identity::Keypair,
+    _transport: T,
+) -> Result<libp2p::swarm::Swarm<Behavior>, Box<dyn std::error::Error>>
+where
+    T: libp2p::core::transport::Transport + 'static,
+    T::Output: libp2p::core::muxing::StreamMuxer + Send + Sync + 'static,
+    <T::Output as libp2p::core::muxing::StreamMuxer>::Substream: futures::AsyncRead + futures::AsyncWrite + Unpin,
+{
+    // Create the behavior
+    let behavior = create_behavior(local_peer_id, local_key.clone())?;
+    
+    // Build the swarm
+    let swarm = libp2p::SwarmBuilder::with_existing_identity(local_key)
+        .with_tokio()
+        .with_tcp(
+            libp2p::tcp::Config::default(),
+            libp2p::noise::Config::new,
+            libp2p::yamux::Config::default,
+        )?
+        .with_behaviour(|_| Ok(behavior))?
+        .with_swarm_config(|_| libp2p::swarm::Config::with_tokio_executor())
+        .build();
+    
+    Ok(swarm)
 }
 
 #[cfg(test)]

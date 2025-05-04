@@ -164,4 +164,88 @@ impl NonceSequence for FixedNonce {
     fn advance(&mut self) -> Result<Nonce, ring::error::Unspecified> {
         Ok(Nonce::assume_unique_for_key(self.nonce_bytes))
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_key_generation() {
+        let key = generate_key().unwrap();
+        assert_eq!(key.len(), 32); // AES-256 key should be 32 bytes
+    }
+
+    #[test]
+    fn test_encrypt_decrypt() {
+        let data = b"Hello, this is a test message for encryption!";
+        let key = generate_key().unwrap();
+        
+        // Encrypt the data
+        let encrypted = encrypt(data, &key).unwrap();
+        
+        // Verify encrypted data is different from original
+        assert_ne!(&encrypted, data);
+        
+        // Decrypt the data
+        let decrypted = decrypt(&encrypted, &key).unwrap();
+        
+        // Verify decrypted data matches original
+        assert_eq!(decrypted, data);
+    }
+
+    #[test]
+    fn test_wrong_key_fails() {
+        let data = b"Secret message";
+        let key1 = generate_key().unwrap();
+        let key2 = generate_key().unwrap();
+        
+        // Encrypt with key1
+        let encrypted = encrypt(data, &key1).unwrap();
+        
+        // Attempt to decrypt with key2 should fail
+        let result = decrypt(&encrypted, &key2);
+        assert!(result.is_err());
+    }
+    
+    #[test]
+    fn test_signing_verification() {
+        let message = b"Test message for signing";
+        
+        // Generate a keypair
+        let (private_key, public_key) = generate_signing_keypair().unwrap();
+        
+        // Sign the message
+        let signature = sign_message(message, &private_key).unwrap();
+        
+        // Verify the signature
+        let valid = verify_signature(message, &signature, &public_key).unwrap();
+        assert!(valid);
+        
+        // Try with a different message
+        let different_message = b"Different message";
+        let invalid = verify_signature(different_message, &signature, &public_key).unwrap();
+        assert!(!invalid);
+    }
+    
+    #[tokio::test]
+    async fn test_file_hash() {
+        // Create a temporary file
+        let dir = tempfile::tempdir().unwrap();
+        let file_path = dir.path().join("test_hash.txt");
+        
+        // Write content to the file
+        let content = b"Test content for hashing";
+        tokio::fs::write(&file_path, content).await.unwrap();
+        
+        // Compute hash
+        let hash = compute_file_hash(&file_path).await.unwrap();
+        
+        // Verify hash is not empty
+        assert!(!hash.is_empty());
+        
+        // Verify hash is consistent
+        let hash2 = compute_file_hash(&file_path).await.unwrap();
+        assert_eq!(hash, hash2);
+    }
 } 

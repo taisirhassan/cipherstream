@@ -30,6 +30,10 @@ enum Commands {
         /// Optional port to listen on
         #[arg(short, long, default_value_t = 8000)]
         port: u16,
+        
+        /// Optional data directory for storing node data
+        #[arg(long, default_value = ".cipherstream")]
+        data_dir: String,
     },
     /// Send a file to a peer
     Send {
@@ -95,9 +99,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
     
     match cli.command {
-        Commands::Start { port } => {
-            info!("Starting peer node on port {}", port);
-            network::start_node(port).await?;
+        Commands::Start { port, data_dir } => {
+            info!("Starting node on port {}...", port);
+            if let Err(e) = network::start_node(port, Some(data_dir)).await {
+                error!("Node failed to start: {}", e);
+            }
         }
         Commands::Send { file, peer, encrypt } => {
             if !file.exists() {
@@ -118,7 +124,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("Starting temporary node to send file...");
             
             // First generate a peer ID for our temporary node
-            let (local_peer_id, local_key) = network::generate_peer_id();
+            let (local_peer_id, _local_key) = network::generate_peer_id();
             println!("Temporary node ID: {}", local_peer_id);
             
             // Start a swarm with a single purpose - to send this file
@@ -128,7 +134,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("Encryption: {}", if encrypt { "enabled" } else { "disabled" });
             
             // Create a temp node and send the file
-            network::start_temp_node_and_send_file(peer_id, file_path, encrypt).await?;
+            // Use a temporary data directory for the sending node
+            let temp_data_dir = format!(".cipherstream_temp_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs());
+            network::start_temp_node_and_send_file(peer_id, file_path, encrypt, Some(temp_data_dir)).await?;
             
             println!("File transfer command completed. Check logs for status.");
         }

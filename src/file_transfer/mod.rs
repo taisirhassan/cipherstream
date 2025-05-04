@@ -41,9 +41,12 @@ enum FileTransferState {
 
 impl FileTransferManager {
     pub fn new(download_dir: String) -> Self {
+        // Ensure the downloads directory exists
         std::fs::create_dir_all(&download_dir).unwrap_or_else(|e| {
             println!("Warning: Could not create download directory: {}", e);
         });
+        
+        println!("📁 File transfer manager using download directory: {}", download_dir);
         
         Self {
             download_dir,
@@ -58,6 +61,8 @@ impl FileTransferManager {
         file_path: String,
         size: u64,
     ) {
+        println!("📤 Initializing file transfer: {}, size: {} bytes", file_path, size);
+        
         // Add to active transfers
         self.active_transfers.insert(
             transfer_id,
@@ -80,20 +85,42 @@ impl FileTransferManager {
         println!("📥 Received file transfer request from {}: {} ({} bytes)", 
             peer, file_name, file_size);
         
-        // Create the file path in the download directory
+        // Create the file path in the download directory, ensuring proper path construction
         let file_path = format!("{}/{}", self.download_dir, file_name);
+        println!("📂 Will save file to: {}", file_path);
+        
+        // Ensure parent directory exists (just in case)
+        if let Some(parent) = std::path::Path::new(&file_path).parent() {
+            std::fs::create_dir_all(parent).unwrap_or_else(|e| {
+                println!("Warning: Could not create parent directory: {}", e);
+            });
+        }
         
         // Check if we want to accept this file
         let accept = true; // Always accept for now
         
         if accept {
             // Create or truncate the file
-            let file = File::create(&file_path).await?;
-            file.set_len(0).await?;
+            println!("Creating file at {}", file_path);
+            let file = match File::create(&file_path).await {
+                Ok(f) => f,
+                Err(e) => {
+                    println!("❌ Error creating file: {}", e);
+                    return Err(format!("Error creating file: {}", e).into());
+                }
+            };
+            
+            match file.set_len(0).await {
+                Ok(_) => {},
+                Err(e) => {
+                    println!("❌ Error setting file length: {}", e);
+                    return Err(format!("Error setting file length: {}", e).into());
+                }
+            }
             
             // Add to active transfers
             self.active_transfers.insert(
-                transfer_id,
+                transfer_id.clone(),
                 FileTransferState::Receiving {
                     file_path: file_path.clone(),
                     offset: 0,
@@ -101,6 +128,10 @@ impl FileTransferManager {
                     writer: Some(file),
                 },
             );
+            
+            println!("✅ Accepting file transfer: {}", transfer_id);
+        } else {
+            println!("❌ Rejecting file transfer: {}", transfer_id);
         }
         
         Ok(accept)
@@ -218,5 +249,24 @@ impl FileTransferManager {
         // Remove the transfer
         self.active_transfers.remove(transfer_id);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_protocol_creation() {
+        let _protocol = FileTransferProtocol::new();
+        // Just verify that we can create a protocol instance
+        assert!(true);
+    }
+
+    #[test]
+    fn test_codec_creation() {
+        let _codec = FileTransferCodec::default();
+        // Just verify that we can create a codec instance 
+        assert!(true);
     }
 } 
