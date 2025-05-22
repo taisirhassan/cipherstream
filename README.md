@@ -1,15 +1,25 @@
 # CipherStream
 
-CipherStream is a secure P2P file transfer application built with Rust and libp2p. It allows users to send files directly to other peers on the network with optional end-to-end encryption.
+CipherStream is a secure P2P file transfer application built with Rust and libp2p. It allows users to send files directly to other peers on the network with **automatic transport-level encryption** via libp2p's Noise protocol.
 
 ## Features
 
 - **Peer-to-Peer Architecture**: Direct file transfers between peers without any central server
-- **End-to-End Encryption**: Optional AES-256-GCM encryption for secure file transfers
+- **Automatic Transport Security**: Built-in encryption using libp2p's Noise protocol for all communications
 - **Auto Discovery**: Local network peer discovery using mDNS
-- **Reliable Transfers**: Chunked file transfer with checksums
+- **Reliable Transfers**: Chunked file transfer with progress tracking
 - **Cross-Platform**: Works on macOS, Linux, and Windows
 - **Command-Line Interface**: Easy-to-use commands for sending and receiving files
+
+## Security
+
+CipherStream leverages **libp2p's Noise protocol** for automatic transport-level encryption. This means:
+
+- All communications between peers are automatically encrypted
+- No need to manually enable encryption - it's always on
+- Uses industry-standard cryptographic protocols
+- Peer authentication and secure key exchange are handled automatically
+- Transport security is transparent to the user
 
 ## Installation
 
@@ -51,13 +61,14 @@ Options:
 To send a file to another peer:
 
 ```bash
-cipherstream send --peer <PEER_ID> --file <FILE_PATH> [--encrypt]
+cipherstream send --peer <PEER_ID> --file <FILE_PATH>
 ```
 
 Options:
 - `--peer <PEER_ID>`: The peer ID of the receiving node
 - `--file <FILE_PATH>`: Path to the file to send
-- `--encrypt`: Enable end-to-end encryption
+
+**Note**: All file transfers are automatically encrypted via libp2p's transport security.
 
 ### Examples
 
@@ -71,19 +82,14 @@ Options:
    cipherstream send --peer 12D3KooWB8rRTvkEnEpSvfGYEUkgpNtnEfwYzpnqCMgTRo7LghDz --file ~/Documents/report.pdf
    ```
 
-3. Send an encrypted file:
-   ```bash
-   cipherstream send --peer 12D3KooWB8rRTvkEnEpSvfGYEUkgpNtnEfwYzpnqCMgTRo7LghDz --file ~/Documents/confidential.pdf --encrypt
-   ```
-
 ## Architecture
 
 CipherStream is built on top of the libp2p networking stack and uses several components:
 
-- **Network**: Handles connections, peer discovery and communication using libp2p
-- **Crypto**: Provides encryption, decryption, and file hashing functionality
+- **Network**: Handles connections, peer discovery and communication using libp2p with Noise protocol for security
 - **Protocol**: Defines the messages exchanged during file transfers
-- **File Transfer**: Manages the actual file transfer operations
+- **File Transfer**: Manages the actual file transfer operations with chunking and progress tracking
+- **Discovery**: Uses mDNS for local peer discovery and Kademlia DHT for broader network discovery
 
 The application uses asynchronous Rust with Tokio runtime for handling concurrent operations.
 

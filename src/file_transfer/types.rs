@@ -39,7 +39,6 @@ pub enum ProtocolRequest {
     HandshakeRequest {
         filename: String,
         filesize: u64,
-        encrypted: bool,
         transfer_id: String,
     },
     /// File data chunk request

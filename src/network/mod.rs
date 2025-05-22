@@ -317,9 +317,9 @@ async fn handle_req_resp_event(
             match message {
                 request_handler::Message::Request { request, channel, .. } => {
                     match request {
-                        ProtocolRequest::HandshakeRequest { filename, filesize, encrypted, transfer_id } => {
-                            info!("🤝 Received HandshakeRequest for '{}' ({} bytes, encrypted: {}, id: {})", 
-                                   filename, filesize, encrypted, transfer_id);
+                        ProtocolRequest::HandshakeRequest { filename, filesize, transfer_id } => {
+                            info!("🤝 Received HandshakeRequest for '{}' ({} bytes, id: {})", 
+                                   filename, filesize, transfer_id);
                             
                             // Create download directory if it doesn't exist
                             std::fs::create_dir_all(&download_dir)?;
@@ -398,7 +398,6 @@ async fn send_handshake_request(
     peer_id: &PeerId,
     filename: &str,
     file_path: &str,
-    encrypt: bool,
 ) -> Result<OutboundRequestId, AnyhowError> {
     info!("🤝 Initiating handshake for '{}' with {}", filename, peer_id);
     
@@ -413,7 +412,6 @@ async fn send_handshake_request(
     let request = ProtocolRequest::HandshakeRequest {
         filename: filename.to_string(),
         filesize,
-        encrypted: encrypt,
         transfer_id,
     };
 
@@ -502,10 +500,11 @@ async fn cancel_transfer(
 }
 
 // Update the start_temp_node_and_send_file function to use these new functions
+// Note: libp2p Noise protocol provides transport-level encryption automatically
 pub async fn start_temp_node_and_send_file(
     target_peer_id: PeerId,
     file_path_str: String,
-    encrypt: bool,
+    _encrypt: bool, // Deprecated: libp2p Noise provides encryption
     data_dir: Option<String>,
 ) -> Result<(), AnyhowError> {
     let _start_time = Instant::now();
@@ -584,7 +583,7 @@ pub async fn start_temp_node_and_send_file(
 
                             if !handshake_sent {
                                 info!("🤝 Sending handshake request for file: {}", filename);
-                                match send_handshake_request(&mut swarm, &target_peer_id, &filename, &file_path_str, encrypt).await {
+                                match send_handshake_request(&mut swarm, &target_peer_id, &filename, &file_path_str).await {
                                     Ok(request_id) => {
                                         handshake_sent = true;
                                         handshake_request_id = Some(request_id);

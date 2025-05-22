@@ -32,7 +32,6 @@ pub enum SwarmCommand {
     SendFile {
         peer_id: PeerId,
         file_path: String,
-        encrypt: bool,
     },
 }
 
@@ -162,12 +161,11 @@ pub fn dial_peer(peer_id: PeerId) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Send a file to a peer
-pub fn send_file(peer_id: PeerId, file_path: String, encrypt: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn send_file(peer_id: PeerId, file_path: String) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(tx) = get_swarm_channel() {
         let _ = tx.try_send(SwarmCommand::SendFile {
             peer_id,
             file_path,
-            encrypt,
         });
         Ok(())
     } else {

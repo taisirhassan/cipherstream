@@ -13,17 +13,12 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use lazy_static::lazy_static;
 use uuid;
-use crate::crypto; // Import crypto module for encryption
 use thiserror::Error;
 use libp2p::StreamProtocol;
 
 // State to hold pending filenames for peers whose handshake was accepted
 lazy_static! {
     static ref PENDING_FILES: Mutex<HashMap<PeerId, String>> = Mutex::new(HashMap::new());
-    // Map to store encryption status of transfers
-    static ref ENCRYPTED_TRANSFERS: Mutex<HashMap<String, bool>> = Mutex::new(HashMap::new());
-    // Map to store encryption keys for transfers (in a real secure app, use a better key storage)
-    static ref ENCRYPTION_KEYS: Mutex<HashMap<String, Vec<u8>>> = Mutex::new(HashMap::new());
 }
 
 // Constants
@@ -220,9 +215,9 @@ pub async fn handle_handshake_event(
             match message {
                 request_handler::Message::Request { request, channel, .. } => {
                     match request {
-                        ProtocolRequest::HandshakeRequest { filename, filesize, encrypted, transfer_id } => {
-                            println!("🤝 Received HandshakeRequest for '{}' ({} bytes, encrypted: {}, id: {}) from {}", 
-                                        filename, filesize, encrypted, transfer_id, peer);
+                        ProtocolRequest::HandshakeRequest { filename, filesize, transfer_id } => {
+                            println!("🤝 Received HandshakeRequest for '{}' ({} bytes, id: {}) from {}", 
+                                        filename, filesize, transfer_id, peer);
                             
                             // Store the filename for later use (e.g., to allow accepting the file)
                             store_pending_filename(peer, filename.clone());
@@ -235,20 +230,6 @@ pub async fn handle_handshake_event(
                             
                             // Check if we want to accept this file
                             let accept = true; // Always accept for now
-                            
-                            // Track encryption for this transfer if applicable
-                            if encrypted {
-                                let mut encrypted_transfers = ENCRYPTED_TRANSFERS.lock().unwrap();
-                                encrypted_transfers.insert(transfer_id.clone(), true);
-                                
-                                // Generate and store an encryption key (simplified)
-                                let mut encryption_keys = ENCRYPTION_KEYS.lock().unwrap();
-                                // For simplicity, use a fixed key derived from the transfer ID
-                                let key = crypto::generate_key()?;
-                                encryption_keys.insert(transfer_id.clone(), key);
-                                
-                                println!("🔐 Added encryption key for transfer {}", transfer_id);
-                            }
                             
                             // Create and send the handshake response
                             let response = ProtocolResponse::HandshakeResponse { 
@@ -282,40 +263,8 @@ pub async fn handle_handshake_event(
                             // Create the download path
                             let file_path = format!("downloads/{}", filename);
                             
-                            // Check if this transfer should be decrypted
-                            let is_encrypted = {
-                                let encrypted_transfers = ENCRYPTED_TRANSFERS.lock().unwrap();
-                                encrypted_transfers.get(&transfer_id).copied().unwrap_or(false)
-                            };
-                            
-                            // Process the chunk (decrypt if necessary)
-                            let processed_data = if is_encrypted {
-                                println!("🔐 Decrypting chunk {} for transfer {}", chunk_index, transfer_id);
-                                // Get the encryption key
-                                let encryption_key = {
-                                    let encryption_keys = ENCRYPTION_KEYS.lock().unwrap();
-                                    encryption_keys.get(&transfer_id).cloned()
-                                };
-                                
-                                if let Some(key) = encryption_key {
-                                    match crypto::decrypt(&data, &key) {
-                                        Ok(decrypted) => {
-                                            println!("🔓 Decrypted chunk {} for transfer {}", chunk_index, transfer_id);
-                                            decrypted
-                                        }
-                                        Err(e) => {
-                                            println!("❌ Failed to decrypt chunk {}: {:?}", chunk_index, e);
-                                            // Send error response
-                                            return Ok(HandshakeResult::OtherEvent);
-                                        }
-                                    }
-                                } else {
-                                    println!("❌ No encryption key found for transfer {}", transfer_id);
-                                    data
-                                }
-                            } else {
-                                data
-                            };
+                            // Data is already decrypted by libp2p Noise protocol
+                            let processed_data = data;
                             
                             // Open or create the file
                             let mut file = match tokio::fs::OpenOptions::new()
@@ -339,7 +288,7 @@ pub async fn handle_handshake_event(
                                 return Ok(HandshakeResult::OtherEvent);
                             }
                             
-                            // Write the processed (possibly decrypted) chunk
+                            // Write the processed data
                             if let Err(e) = file.write_all(&processed_data).await {
                                 println!("❌ Failed to write chunk: {}", e);
                                 // Send an error response directly via channel
@@ -361,16 +310,6 @@ pub async fn handle_handshake_event(
                                 // Remove from pending files
                                 let mut pending_files = PENDING_FILES.lock().unwrap();
                                 pending_files.remove(&peer);
-                                
-                                // Clean up transfer state
-                                let mut encrypted_transfers = ENCRYPTED_TRANSFERS.lock().unwrap();
-                                encrypted_transfers.remove(&transfer_id);
-                                
-                                if is_encrypted {
-                                    let mut encryption_keys = ENCRYPTION_KEYS.lock().unwrap();
-                                    encryption_keys.remove(&transfer_id);
-                                    println!("🔐 Removed encryption key for completed transfer {}", transfer_id);
-                                }
                             }
                             
                             // Send a response to acknowledge the chunk
@@ -393,13 +332,6 @@ pub async fn handle_handshake_event(
                             // Remove from pending files
                             let mut pending_files = PENDING_FILES.lock().unwrap();
                             pending_files.remove(&peer);
-                            
-                            // Clean up transfer state
-                            let mut encrypted_transfers = ENCRYPTED_TRANSFERS.lock().unwrap();
-                            encrypted_transfers.remove(&transfer_id);
-                            
-                            let mut encryption_keys = ENCRYPTION_KEYS.lock().unwrap();
-                            encryption_keys.remove(&transfer_id);
                             
                             // Acknowledge cancellation
                             let response = ProtocolResponse::TransferComplete {
@@ -477,9 +409,8 @@ pub async fn send_handshake_request(
     peer_id: &PeerId,
     filename: &str,
     file_path: &str,
-    encrypt: bool,  // Add encryption parameter
 ) -> Result<OutboundRequestId, Box<dyn Error>> {
-    println!("🤝 Initiating handshake for '{}' with {} (encrypted: {})", filename, peer_id, encrypt);
+    println!("🤝 Initiating handshake for '{}' with {}", filename, peer_id);
     
     // Get file size
     let metadata = tokio::fs::metadata(file_path).await?;
@@ -488,11 +419,10 @@ pub async fn send_handshake_request(
     // Create a transfer ID
     let transfer_id = uuid::Uuid::new_v4().to_string();
     
-    // Create handshake request with more details
+    // Create handshake request
     let request = ProtocolRequest::HandshakeRequest {
         filename: filename.to_string(),
         filesize,
-        encrypted: encrypt,
         transfer_id,
     };
 
@@ -503,26 +433,22 @@ pub async fn send_handshake_request(
     Ok(_request_id)
 }
 
-// Custom Error type that is Send + Sync
+/// File transfer error types
 #[derive(Debug, Error)]
 pub enum SendFileError {
     #[error("IO Error: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Crypto Error: {0}")]
-    Crypto(#[from] crate::crypto::CryptoError),
-    #[error("Missing encryption key for encrypted transfer")]
-    MissingEncryptionKey,
     #[error("Failed to send chunk request")]
-    SendRequestError, // Simplified error
+    SendRequestError,
 }
 
-/// Send a file to a peer
+/// Send a file to a peer (libp2p Noise provides transport encryption)
 pub async fn send_file(
     swarm: &mut Swarm<Behavior>,
     peer_id: &PeerId,
     file_path: &str,
     transfer_id: &str,
-) -> Result<(), SendFileError> { // Return specific SendFileError
+) -> Result<(), SendFileError> {
     // Open the file
     let mut file = tokio::fs::File::open(file_path).await?;
     
@@ -534,21 +460,6 @@ pub async fn send_file(
     let total_chunks = (file_size + CHUNK_SIZE as u64 - 1) / CHUNK_SIZE as u64;
     
     println!("📤 Starting file transfer: {}, size: {} bytes, chunks: {}", file_path, file_size, total_chunks);
-    
-    // Check if this transfer is encrypted
-    let is_encrypted = {
-        let encrypted_transfers = ENCRYPTED_TRANSFERS.lock().unwrap();
-        encrypted_transfers.get(transfer_id).copied().unwrap_or(false)
-    };
-    
-    let mut encryption_key = None;
-    if is_encrypted {
-        let keys = ENCRYPTION_KEYS.lock().unwrap();
-        encryption_key = keys.get(transfer_id).cloned();
-        if encryption_key.is_none() {
-            return Err(SendFileError::MissingEncryptionKey);
-        }
-    }
     
     // Send file in chunks
     let mut offset = 0;
@@ -567,13 +478,8 @@ pub async fn send_file(
         // Is this the last chunk?
         let is_last = offset + n as u64 >= file_size;
         
-        // Process chunk data (encrypt if needed)
-        let chunk_data = if is_encrypted {
-            let key = encryption_key.as_ref().ok_or(SendFileError::MissingEncryptionKey)?;
-            crypto::encrypt(&buffer[..n], key)?
-        } else {
-            buffer[..n].to_vec()
-        };
+        // Data will be encrypted by libp2p Noise at transport layer
+        let chunk_data = buffer[..n].to_vec();
         
         // Create the file chunk request
         let request = ProtocolRequest::FileChunk {
@@ -679,7 +585,6 @@ mod tests {
         let req = ProtocolRequest::HandshakeRequest {
             filename: "test.txt".to_string(),
             filesize: 1024,
-            encrypted: true,
             transfer_id: "abc123".to_string(),
         };
         
@@ -694,10 +599,9 @@ mod tests {
         
         // Compare
         match decoded_req {
-            ProtocolRequest::HandshakeRequest { filename, filesize, encrypted, transfer_id } => {
+            ProtocolRequest::HandshakeRequest { filename, filesize, transfer_id } => {
                 assert_eq!(filename, "test.txt");
                 assert_eq!(filesize, 1024);
-                assert_eq!(encrypted, true);
                 assert_eq!(transfer_id, "abc123");
             },
             _ => panic!("Wrong variant decoded"),

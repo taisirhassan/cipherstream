@@ -1,5 +1,5 @@
 use ring::{
-    aead::{self, Aad, BoundKey, Nonce, NonceSequence, SealingKey, UnboundKey, AES_256_GCM},
+    aead::{self, UnboundKey, AES_256_GCM},
     rand::{SecureRandom, SystemRandom},
     signature::{self, Ed25519KeyPair, KeyPair},
     digest,
@@ -69,22 +69,20 @@ pub fn generate_key() -> Result<Vec<u8>, CryptoError> {
 
 /// Encrypt data with AES-256-GCM
 pub fn encrypt(data: &[u8], key: &[u8]) -> Result<Vec<u8>, CryptoError> {
-    // Create nonce and prepend it to the output
+    // Generate a random nonce
     let mut nonce_bytes = [0u8; 12];
     let rng = SystemRandom::new();
     rng.fill(&mut nonce_bytes).map_err(|_| CryptoError::Encryption)?;
-
-    // Setup the encryption
+    
     let unbound_key = UnboundKey::new(&AES_256_GCM, key).map_err(|_| CryptoError::InvalidKey)?;
-    let nonce_sequence = FixedNonce::new(nonce_bytes);
-    let mut sealing_key = SealingKey::new(unbound_key, nonce_sequence);
-
-    // Encrypt the data
-    let aad = Aad::empty();
+    let aead_key = aead::LessSafeKey::new(unbound_key);
+    let nonce = aead::Nonce::assume_unique_for_key(nonce_bytes);
+    
     let mut in_out = data.to_vec();
-    sealing_key.seal_in_place_append_tag(aad, &mut in_out).map_err(|_| CryptoError::Encryption)?;
-
-    // Prepend the nonce
+    aead_key.seal_in_place_append_tag(nonce, aead::Aad::empty(), &mut in_out)
+        .map_err(|_| CryptoError::Encryption)?;
+    
+    // Prepend nonce to encrypted data
     let mut result = nonce_bytes.to_vec();
     result.extend_from_slice(&in_out);
     
@@ -146,23 +144,6 @@ pub fn verify_signature(message: &[u8], signature: &[u8], public_key: &[u8]) -> 
     match peer_public_key.verify(message, signature) {
         Ok(_) => Ok(true),
         Err(_) => Ok(false),
-    }
-}
-
-// A fixed nonce for AES-GCM
-struct FixedNonce {
-    nonce_bytes: [u8; 12],
-}
-
-impl FixedNonce {
-    fn new(nonce_bytes: [u8; 12]) -> Self {
-        Self { nonce_bytes }
-    }
-}
-
-impl NonceSequence for FixedNonce {
-    fn advance(&mut self) -> Result<Nonce, ring::error::Unspecified> {
-        Ok(Nonce::assume_unique_for_key(self.nonce_bytes))
     }
 }
 

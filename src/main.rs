@@ -44,10 +44,6 @@ enum Commands {
         /// Peer ID to send to
         #[arg(short, long)]
         peer: String,
-        
-        /// Encrypt the file before sending
-        #[arg(short, long)]
-        encrypt: bool,
     },
     /// Connect to a specific peer
     Connect {
@@ -103,9 +99,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             info!("Starting node on port {}...", port);
             if let Err(e) = network::start_node(port, Some(data_dir)).await {
                 error!("Node failed to start: {}", e);
-            }
         }
-        Commands::Send { file, peer, encrypt } => {
+    }
+        Commands::Send { file, peer } => {
             if !file.exists() {
                 error!("File does not exist: {:?}", file);
                 return Err("File not found".into());
@@ -119,24 +115,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     return Err("Invalid peer ID format".into());
                 }
             };
-            
+    
             // We need to start a temporary node to send the file
             println!("Starting temporary node to send file...");
             
             // First generate a peer ID for our temporary node
             let (local_peer_id, _local_key) = network::generate_peer_id();
             println!("Temporary node ID: {}", local_peer_id);
-            
+    
             // Start a swarm with a single purpose - to send this file
             let file_path = file.to_string_lossy().to_string();
             
             println!("Initiating file transfer for {} to {}", file_path, peer_id);
-            println!("Encryption: {}", if encrypt { "enabled" } else { "disabled" });
             
             // Create a temp node and send the file
             // Use a temporary data directory for the sending node
             let temp_data_dir = format!(".cipherstream_temp_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs());
-            network::start_temp_node_and_send_file(peer_id, file_path, encrypt, Some(temp_data_dir)).await?;
+            network::start_temp_node_and_send_file(peer_id, file_path, false, Some(temp_data_dir)).await?;
             
             println!("File transfer command completed. Check logs for status.");
         }
@@ -160,7 +155,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             
             if peers.is_empty() {
                 println!("No peers discovered yet. Start by running the Start command.");
-            } else {
+                        } else {
                 println!("Discovered peers:");
                 for (peer_id, addrs) in peers {
                     println!("Peer: {} at:", peer_id);

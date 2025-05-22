@@ -1,54 +1,62 @@
 use cipherstream::file_transfer::types::{ProtocolRequest, ProtocolResponse};
-use bincode::{config, Encode, Decode};
+use bincode::config;
 
 #[test]
 fn test_protocol_request_serialization() {
     // Test HandshakeRequest
-    let handshake = ProtocolRequest::HandshakeRequest {
+    let req = ProtocolRequest::HandshakeRequest {
         filename: "test.txt".to_string(),
         filesize: 1024,
-        encrypted: true,
-        transfer_id: "test-id-1".to_string(),
+        transfer_id: "abc123".to_string(),
     };
     
-    // Serialize using bincode
-    let config = config::standard();
-    let encoded: Vec<u8> = bincode::encode_to_vec(&handshake, config).unwrap();
+    // Serialize
+    let bytes = bincode::encode_to_vec(req.clone(), config::standard()).unwrap();
     
-    // Deserialize and verify
-    let (decoded, _): (ProtocolRequest, usize) = bincode::decode_from_slice(&encoded, config).unwrap();
+    // Deserialize
+    let (decoded_req, _): (ProtocolRequest, _) = bincode::decode_from_slice(
+        &bytes, 
+        config::standard()
+    ).unwrap();
     
-    match decoded {
-        ProtocolRequest::HandshakeRequest { filename, filesize, encrypted, transfer_id } => {
+    // Compare
+    match decoded_req {
+        ProtocolRequest::HandshakeRequest { filename, filesize, transfer_id } => {
             assert_eq!(filename, "test.txt");
             assert_eq!(filesize, 1024);
-            assert_eq!(encrypted, true);
-            assert_eq!(transfer_id, "test-id-1");
+            assert_eq!(transfer_id, "abc123");
         },
-        _ => panic!("Decoded to wrong variant"),
+        _ => panic!("Wrong variant decoded"),
     }
     
     // Test FileChunk
-    let chunk = ProtocolRequest::FileChunk {
-        transfer_id: "test-id-2".to_string(),
-        chunk_index: 5,
+    let req = ProtocolRequest::FileChunk {
+        transfer_id: "abc123".to_string(),
+        chunk_index: 1,
         total_chunks: 10,
         data: vec![1, 2, 3, 4, 5],
         is_last: false,
     };
     
-    let encoded: Vec<u8> = bincode::encode_to_vec(&chunk, config).unwrap();
-    let (decoded, _): (ProtocolRequest, usize) = bincode::decode_from_slice(&encoded, config).unwrap();
+    // Serialize
+    let bytes = bincode::encode_to_vec(req, config::standard()).unwrap();
     
-    match decoded {
+    // Deserialize
+    let (decoded_req, _): (ProtocolRequest, _) = bincode::decode_from_slice(
+        &bytes, 
+        config::standard()
+    ).unwrap();
+    
+    // Compare
+    match decoded_req {
         ProtocolRequest::FileChunk { transfer_id, chunk_index, total_chunks, data, is_last } => {
-            assert_eq!(transfer_id, "test-id-2");
-            assert_eq!(chunk_index, 5);
+            assert_eq!(transfer_id, "abc123");
+            assert_eq!(chunk_index, 1);
             assert_eq!(total_chunks, 10);
             assert_eq!(data, vec![1, 2, 3, 4, 5]);
             assert_eq!(is_last, false);
         },
-        _ => panic!("Decoded to wrong variant"),
+        _ => panic!("Wrong variant decoded"),
     }
     
     // Test CancelTransfer
@@ -56,8 +64,8 @@ fn test_protocol_request_serialization() {
         transfer_id: "test-id-3".to_string(),
     };
     
-    let encoded: Vec<u8> = bincode::encode_to_vec(&cancel, config).unwrap();
-    let (decoded, _): (ProtocolRequest, usize) = bincode::decode_from_slice(&encoded, config).unwrap();
+    let encoded: Vec<u8> = bincode::encode_to_vec(&cancel, config::standard()).unwrap();
+    let (decoded, _): (ProtocolRequest, usize) = bincode::decode_from_slice(&encoded, config::standard()).unwrap();
     
     match decoded {
         ProtocolRequest::CancelTransfer { transfer_id } => {

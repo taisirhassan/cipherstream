@@ -2,7 +2,6 @@ use cipherstream::file_transfer::request_handler::{FileTransferCodec, FileTransf
 use cipherstream::file_transfer::types::{ProtocolRequest, ProtocolResponse};
 use libp2p::request_response::Codec;
 use futures::io::Cursor;
-use std::io;
 use async_std::task;
 
 #[test]
@@ -10,7 +9,7 @@ fn test_codec_protocol_creation() {
     let protocol = FileTransferProtocol::new();
     assert_eq!(protocol.as_ref(), "/cipherstream/file-transfer/1.0.0");
     
-    let codec = FileTransferCodec::default();
+    let _codec = FileTransferCodec::default();
     // Just verify we can create the codec
     assert!(true);
 }
@@ -24,7 +23,6 @@ fn test_codec_read_write_request() {
     let request = ProtocolRequest::HandshakeRequest {
         filename: "test.txt".to_string(),
         filesize: 1024,
-        encrypted: true,
         transfer_id: "test-id-1".to_string(),
     };
     
@@ -53,12 +51,11 @@ fn test_codec_read_write_request() {
     // Verify the decoded request matches the original
     match (decoded_request, request) {
         (
-            ProtocolRequest::HandshakeRequest { filename: f1, filesize: s1, encrypted: e1, transfer_id: t1 },
-            ProtocolRequest::HandshakeRequest { filename: f2, filesize: s2, encrypted: e2, transfer_id: t2 }
+            ProtocolRequest::HandshakeRequest { filename: f1, filesize: s1, transfer_id: t1 },
+            ProtocolRequest::HandshakeRequest { filename: f2, filesize: s2, transfer_id: t2 }
         ) => {
             assert_eq!(f1, f2);
             assert_eq!(s1, s2);
-            assert_eq!(e1, e2);
             assert_eq!(t1, t2);
         },
         _ => panic!("Decoded to wrong variant"),
