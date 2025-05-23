@@ -1,13 +1,23 @@
-pub mod crypto;
-pub mod discovery;
+// Core domain layer
+pub mod core;
+
+// Application layer
+pub mod application;
+
+// Infrastructure layer
+pub mod infrastructure;
+
+// File transfer protocol layer
 pub mod file_transfer;
-pub mod network;
+
+// Protocol module for backward compatibility
 pub mod protocol;
-pub mod utils;
 
-// Re-export key modules for easier access in integration tests
-pub use crypto::{encrypt, decrypt, generate_key};
+// Re-export specific items to avoid ambiguous glob re-exports
+pub use core::domain::*;
+pub use core::traits::*;
+pub use application::{UseCases, ApplicationService, FileSystemService};
+pub use infrastructure::{AppConfig, NetworkServiceImpl, CryptoService, UtilityService, RepositoryBuilder};
 
-// Re-export for easy access in tests
-pub use network::start_node;
-pub use network::start_temp_node_and_send_file; 
+// Re-export crypto module for backward compatibility with tests
+pub use core::crypto; 

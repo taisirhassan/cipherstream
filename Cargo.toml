@@ -36,6 +36,7 @@ base64 = "0.21" # For encoding/decoding keys or IDs if needed
 clap = { version = "4.5", features = ["derive"] } # Command-line argument parsing
 ring = "0.16"
 hex = "0.4"
+sha2 = "0.10"
 indicatif = "0.17"
 async-std = "1.12"
 uuid = { version = "1.16.0", features = ["v4"] }

@@ -2,19 +2,17 @@ use clap::{Parser, Subcommand};
 use log::{info, error};
 use std::path::PathBuf;
 use std::error::Error;
-use libp2p::PeerId;
-use std::str::FromStr;
 
 // Added for tracing file logging
 use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 use tracing_appender::non_blocking::WorkerGuard;
 
-pub mod crypto;
-pub mod discovery;
-pub mod network;
-pub mod protocol;
-pub mod utils;
-pub mod file_transfer;
+// Use new modular structure
+use cipherstream::{
+    infrastructure::{AppConfig, LibP2pNetworkService, CryptoService, InMemoryEventPublisher},
+    application::ApplicationService,
+    core::{domain::PeerId, traits::NetworkService},
+};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -97,73 +95,75 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match cli.command {
         Commands::Start { port, data_dir } => {
             info!("Starting node on port {}...", port);
-            if let Err(e) = network::start_node(port, Some(data_dir)).await {
-                error!("Node failed to start: {}", e);
+            
+            // Create application configuration
+            let mut config = AppConfig::default();
+            config.default_port = port;
+            config.data_directory = data_dir.clone();
+            config.download_directory = format!("{}/downloads", data_dir);
+            
+            // Initialize application service
+            let app_service = ApplicationService::new(config.clone()).await?;
+            info!("📁 Using data directory: {}", app_service.config().data_directory);
+            
+            // Initialize event publisher
+            let event_publisher = std::sync::Arc::new(InMemoryEventPublisher::new());
+            
+            // Initialize libp2p network service
+            let network_service = LibP2pNetworkService::new(
+                std::sync::Arc::new(config),
+                event_publisher
+            ).await.map_err(|e| format!("Failed to create network service: {}", e))?;
+            
+            let peer_id = network_service.local_peer_id();
+            info!("🆔 Local peer id: {}", peer_id);
+            
+            // Start the network service
+            network_service.start_listening(port).await
+                .map_err(|e| format!("Failed to start listening: {}", e))?;
+            info!("🚀 Node started on port {}", port);
+            
+            // Keep the process running
+            loop {
+                tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+                info!("Node is running...");
+            }
         }
-    }
         Commands::Send { file, peer } => {
             if !file.exists() {
                 error!("File does not exist: {:?}", file);
                 return Err("File not found".into());
             }
             
-            // Parse peer ID
-            let peer_id = match PeerId::from_str(&peer) {
-                Ok(id) => id,
-                Err(_) => {
-                    error!("Invalid peer ID format: {}", peer);
-                    return Err("Invalid peer ID format".into());
-                }
-            };
-    
-            // We need to start a temporary node to send the file
-            println!("Starting temporary node to send file...");
+            // Parse peer ID using new modular structure
+            let peer_id = PeerId::from_string(peer);
             
-            // First generate a peer ID for our temporary node
-            let (local_peer_id, _local_key) = network::generate_peer_id();
-            println!("Temporary node ID: {}", local_peer_id);
-    
-            // Start a swarm with a single purpose - to send this file
-            let file_path = file.to_string_lossy().to_string();
+            info!("File transfer functionality will be implemented with new modular architecture");
+            info!("Target peer: {}", peer_id.as_str());
+            info!("File: {:?}", file);
             
-            println!("Initiating file transfer for {} to {}", file_path, peer_id);
+            // Generate hash of file using new crypto service
+            let file_hash = CryptoService::compute_file_hash(&file).await
+                .map_err(|e| format!("Failed to compute file hash: {}", e))?;
+            info!("File hash: {}", file_hash);
             
-            // Create a temp node and send the file
-            // Use a temporary data directory for the sending node
-            let temp_data_dir = format!(".cipherstream_temp_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs());
-            network::start_temp_node_and_send_file(peer_id, file_path, false, Some(temp_data_dir)).await?;
-            
-            println!("File transfer command completed. Check logs for status.");
+            println!("File transfer command prepared (implementation pending with new architecture).");
         }
         Commands::Connect { peer } => {
-            // Parse peer ID
-            let peer_id = match PeerId::from_str(&peer) {
-                Ok(id) => id,
-                Err(_) => {
-                    error!("Invalid peer ID format: {}", peer);
-                    return Err("Invalid peer ID format".into());
-                }
-            };
+            // Parse peer ID using new structure
+            let peer_id = PeerId::from_string(peer);
             
-            info!("Connecting to peer: {}", peer_id);
-            discovery::dial_peer(peer_id)?;
-            println!("Connection initiated. Check logs for status.");
+            info!("Connecting to peer: {}", peer_id.as_str());
+            println!("Connection functionality will be implemented with new modular architecture.");
         }
         Commands::Peers => {
             info!("Listing peers...");
-            let peers = discovery::get_discovered_peers();
             
-            if peers.is_empty() {
-                println!("No peers discovered yet. Start by running the Start command.");
-                        } else {
-                println!("Discovered peers:");
-                for (peer_id, addrs) in peers {
-                    println!("Peer: {} at:", peer_id);
-                    for addr in addrs {
-                        println!("  - {}", addr);
-                    }
-                }
-            }
+            // In the new architecture, peer discovery would be done through the running network service
+            // For now, we'll show a message about how to use the new system
+            println!("Peer discovery is available when the node is running.");
+            println!("To see connected peers, start a node with: cargo run -- start --port 8000");
+            println!("The node will automatically discover and connect to other peers in the network.");
         }
     }
     
