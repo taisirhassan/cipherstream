@@ -147,18 +147,16 @@ impl LibP2pNetworkService {
         ];
 
         for addr_str in &bootstrap_peers {
-            if let Ok(addr) = addr_str.parse::<Multiaddr>() {
-                if let Some(peer_id) = addr.iter().find_map(|p| {
-                    if let libp2p::multiaddr::Protocol::P2p(peer_id) = p {
-                        Some(peer_id)
-                    } else {
-                        None
-                    }
-                }) {
-                    kademlia.add_address(&peer_id, addr);
-                    info!("Added Kademlia bootstrap peer: {}", peer_id);
+            let Ok(addr) = addr_str.parse::<Multiaddr>() else { continue };
+            let Some(peer_id) = addr.iter().find_map(|p| {
+                if let libp2p::multiaddr::Protocol::P2p(peer_id) = p {
+                    Some(peer_id)
+                } else {
+                    None
                 }
-            }
+            }) else { continue };
+            kademlia.add_address(&peer_id, addr);
+            info!("Added Kademlia bootstrap peer: {}", peer_id);
         }
 
         // Create behaviour
@@ -232,14 +230,12 @@ impl LibP2pNetworkService {
                 // Handle swarm events
                 event = swarm.select_next_some() => {
                     // Trigger Kademlia bootstrap once we start listening
-                    if !bootstrap_attempted {
-                        if let SwarmEvent::NewListenAddr { .. } = event {
+                    if !bootstrap_attempted && matches!(event, SwarmEvent::NewListenAddr { .. }) {
                         if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
                             warn!("Kademlia bootstrap failed: {:?}", e);
                         } else {
                             info!("Kademlia bootstrap initiated successfully");
                             bootstrap_attempted = true;
-                        }
                         }
                     }
 
