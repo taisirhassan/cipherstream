@@ -147,14 +147,18 @@ impl LibP2pNetworkService {
         ];
 
         for addr_str in &bootstrap_peers {
-            let Ok(addr) = addr_str.parse::<Multiaddr>() else { continue };
+            let Ok(addr) = addr_str.parse::<Multiaddr>() else {
+                continue;
+            };
             let Some(peer_id) = addr.iter().find_map(|p| {
                 if let libp2p::multiaddr::Protocol::P2p(peer_id) = p {
                     Some(peer_id)
                 } else {
                     None
                 }
-            }) else { continue };
+            }) else {
+                continue;
+            };
             kademlia.add_address(&peer_id, addr);
             info!("Added Kademlia bootstrap peer: {}", peer_id);
         }
