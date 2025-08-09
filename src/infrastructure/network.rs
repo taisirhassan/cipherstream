@@ -8,6 +8,7 @@ use libp2p::{
     identity, Multiaddr, PeerId, Swarm, SwarmBuilder,
 };
 use futures::stream::StreamExt;
+use tracing::{info, warn, error, debug};
 use async_trait::async_trait;
 use crate::core::{
     domain::{DomainEvent, PeerId as DomainPeerId},
@@ -70,7 +71,7 @@ impl LibP2pNetworkService {
         let local_key = identity::Keypair::generate_ed25519();
         let local_peer_id = PeerId::from(local_key.public());
         
-        println!("🆔 Local peer id: {}", local_peer_id);
+        info!("Local peer id: {}", local_peer_id);
 
         // Configure gossipsub
         let gossipsub_config = gossipsub::ConfigBuilder::default()
@@ -97,7 +98,7 @@ impl LibP2pNetworkService {
             request_response::ProtocolSupport::Full,
         )];
         let request_response = request_response::Behaviour::with_codec(
-            FileTransferCodec::default(),
+            FileTransferCodec,
             protocols,
             request_response::Config::default(),
         );
@@ -134,7 +135,7 @@ impl LibP2pNetworkService {
                     }
                 }) {
                     kademlia.add_address(&peer_id, addr);
-                    println!("🗺️ Added Kademlia bootstrap peer: {}", peer_id);
+                    info!("Added Kademlia bootstrap peer: {}", peer_id);
                 }
             }
         }
@@ -202,7 +203,7 @@ impl LibP2pNetworkService {
                 // Handle commands from the service
                 Some(command) = command_rx.recv() => {
                     if let Err(e) = Self::handle_command(&mut swarm, command).await {
-                        eprintln!("Error handling command: {}", e);
+                        error!("Error handling command: {}", e);
                     }
                 }
                 
@@ -212,9 +213,9 @@ impl LibP2pNetworkService {
                     if !bootstrap_attempted {
                         if let SwarmEvent::NewListenAddr { .. } = event {
                             if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
-                                println!("🗺️ Kademlia bootstrap failed: {:?}", e);
+                                warn!("Kademlia bootstrap failed: {:?}", e);
                             } else {
-                                println!("🗺️ Kademlia bootstrap initiated successfully");
+                                info!("Kademlia bootstrap initiated successfully");
                                 bootstrap_attempted = true;
                             }
                         }
@@ -226,7 +227,7 @@ impl LibP2pNetworkService {
                         &event_publisher,
                         &mut connected_peers,
                     ).await {
-                        eprintln!("Error handling swarm event: {}", e);
+                        error!("Error handling swarm event: {}", e);
                     }
                 }
             }
@@ -246,7 +247,7 @@ impl LibP2pNetworkService {
                 swarm.listen_on(listen_addr.clone())
                     .map_err(|e| format!("Failed to start listening: {}", e))?;
                 
-                println!("🚀 Network service started on {}", listen_addr);
+                info!("Network service started on {}", listen_addr);
             }
             NetworkCommand::ConnectToPeer(addr) => {
                 swarm.dial(addr.clone())
@@ -254,31 +255,31 @@ impl LibP2pNetworkService {
             }
             NetworkCommand::SendFileRequest { peer_id, request } => {
                 let _request_id = swarm.behaviour_mut().request_response.send_request(&peer_id, request);
-                println!("📤 Sent file transfer request to {}", peer_id);
+                info!("Sent file transfer request to {}", peer_id);
             }
             NetworkCommand::SubscribeTopic(topic) => {
                 let topic = gossipsub::IdentTopic::new(topic);
                 swarm.behaviour_mut().gossipsub.subscribe(&topic)
                     .map_err(|e| format!("Failed to subscribe to topic: {}", e))?;
-                println!("📡 Subscribed to topic: {}", topic);
+                info!("Subscribed to topic: {}", topic);
             }
             NetworkCommand::PublishMessage { topic, data } => {
                 let topic = gossipsub::IdentTopic::new(topic);
                 let _message_id = swarm.behaviour_mut().gossipsub.publish(topic.clone(), data)
                     .map_err(|e| format!("Failed to publish message: {}", e))?;
-                println!("📡 Published message to topic: {}", topic);
+                info!("Published message to topic: {}", topic);
             }
             NetworkCommand::StartMdnsDiscovery => {
-                println!("📡 mDNS discovery is automatically enabled");
+                info!("mDNS discovery is automatically enabled");
             }
             NetworkCommand::StopMdnsDiscovery => {
-                println!("📡 mDNS discovery is automatically managed");
+                info!("mDNS discovery is automatically managed");
             }
             NetworkCommand::BootstrapKademlia(peers) => {
                 if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
-                    println!("🗺️ Kademlia bootstrap failed: {:?}", e);
+                    warn!("Kademlia bootstrap failed: {:?}", e);
                 } else {
-                    println!("🗺️ Kademlia bootstrap started");
+                    info!("Kademlia bootstrap started");
                 }
                 
                 // Add bootstrap peers to routing table
@@ -296,12 +297,12 @@ impl LibP2pNetworkService {
             }
             NetworkCommand::FindClosestPeers(peer_id) => {
                 let _ = swarm.behaviour_mut().kademlia.get_closest_peers(peer_id);
-                println!("🗺️ Kademlia finding closest peers to {}", peer_id);
+                debug!("Kademlia finding closest peers to {}", peer_id);
             }
             NetworkCommand::AddKademliaAddress { peer_id, addr } => {
                 let addr_clone = addr.clone();
                 swarm.behaviour_mut().kademlia.add_address(&peer_id, addr);
-                println!("🗺️ Kademlia added address {} to peer {}", addr_clone, peer_id);
+                info!("Kademlia added address {} to peer {}", addr_clone, peer_id);
             }
         }
         Ok(())
@@ -316,10 +317,10 @@ impl LibP2pNetworkService {
     ) -> DomainResult<()> {
         match event {
             SwarmEvent::NewListenAddr { address, .. } => {
-                println!("📡 Listening on {}", address);
+                info!("Listening on {}", address);
             }
             SwarmEvent::ConnectionEstablished { peer_id, endpoint, .. } => {
-                println!("🔗 Connected to peer: {}", peer_id);
+                info!("Connected to peer: {}", peer_id);
                 
                 // Store peer address
                 connected_peers.entry(peer_id).or_default().push(endpoint.get_remote_address().clone());
@@ -333,7 +334,7 @@ impl LibP2pNetworkService {
                 let _ = event_publisher.publish(domain_event).await;
             }
             SwarmEvent::ConnectionClosed { peer_id, .. } => {
-                println!("❌ Disconnected from peer: {}", peer_id);
+                info!("Disconnected from peer: {}", peer_id);
                 
                 // Remove peer
                 connected_peers.remove(&peer_id);
@@ -379,19 +380,19 @@ impl LibP2pNetworkService {
                         let _ = event_tx.send(NetworkEvent::FileTransferRequest { from: peer, request });
                     }
                     request_response::Message::Response { response, .. } => {
-                        println!("📤 Received file transfer response from {}", peer);
+                        info!("Received file transfer response from {}", peer);
                         let _ = event_tx.send(NetworkEvent::FileTransferResponse { from: peer, response });
                     }
                 }
             }
             request_response::Event::OutboundFailure { peer, error, .. } => {
-                println!("❌ Outbound failure to {}: {:?}", peer, error);
+                warn!("Outbound failure to {}: {:?}", peer, error);
             }
             request_response::Event::InboundFailure { peer, error, .. } => {
-                println!("❌ Inbound failure from {}: {:?}", peer, error);
+                warn!("Inbound failure from {}: {:?}", peer, error);
             }
             request_response::Event::ResponseSent { .. } => {
-                println!("📤 Response sent");
+                debug!("Response sent");
             }
         }
         Ok(())
@@ -412,10 +413,10 @@ impl LibP2pNetworkService {
                 });
             }
             gossipsub::Event::Subscribed { peer_id, topic } => {
-                println!("👥 Peer {} subscribed to topic: {}", peer_id, topic);
+                debug!("Peer {} subscribed to topic: {}", peer_id, topic);
             }
             gossipsub::Event::Unsubscribed { peer_id, topic } => {
-                println!("👋 Peer {} unsubscribed from topic: {}", peer_id, topic);
+                debug!("Peer {} unsubscribed from topic: {}", peer_id, topic);
             }
             _ => {}
         }
@@ -426,10 +427,10 @@ impl LibP2pNetworkService {
     async fn handle_identify_event(event: identify::Event) -> DomainResult<()> {
         match event {
             identify::Event::Received { peer_id, info, .. } => {
-                println!("🆔 Identified peer {}: {}", peer_id, info.protocol_version);
+                debug!("Identified peer {}: {}", peer_id, info.protocol_version);
             }
             identify::Event::Sent { peer_id, .. } => {
-                println!("👋 Sent identify info to {}", peer_id);
+                debug!("Sent identify info to {}", peer_id);
             }
             _ => {}
         }
@@ -446,7 +447,7 @@ impl LibP2pNetworkService {
         match event {
             mdns::Event::Discovered(list) => {
                 for (peer_id, _) in list {
-                    println!("🏠 mDNS discovered peer: {}", peer_id);
+                    info!("mDNS discovered peer: {}", peer_id);
                     
                     // Send internal event
                     let _ = event_tx.send(NetworkEvent::PeerConnected(peer_id));
@@ -459,7 +460,7 @@ impl LibP2pNetworkService {
             }
             mdns::Event::Expired(list) => {
                 for (peer_id, _) in list {
-                    println!("🏠 mDNS peer expired: {}", peer_id);
+                    info!("mDNS peer expired: {}", peer_id);
                     
                     // Remove peer
                     connected_peers.remove(&peer_id);
@@ -487,26 +488,26 @@ impl LibP2pNetworkService {
             kad::Event::OutboundQueryProgressed { result, .. } => {
                 match result {
                     kad::QueryResult::GetClosestPeers(Ok(kad::GetClosestPeersOk { peers, .. })) => {
-                        println!("🗺️ Kademlia found {} close peers", peers.len());
+                        debug!("Kademlia found {} close peers", peers.len());
                         for peer_info in peers {
                             let _ = event_tx.send(NetworkEvent::PeerConnected(peer_info.peer_id));
                         }
                     }
                     kad::QueryResult::Bootstrap(Ok(kad::BootstrapOk { num_remaining, .. })) => {
                         if num_remaining == 0 {
-                            println!("🗺️ Kademlia bootstrap complete - connected to DHT network");
+                            info!("Kademlia bootstrap complete - connected to DHT network");
                         } else {
-                            println!("🗺️ Kademlia bootstrap in progress... {} queries remaining", num_remaining);
+                            debug!("Kademlia bootstrap in progress... {} queries remaining", num_remaining);
                         }
                     }
                     kad::QueryResult::Bootstrap(Err(e)) => {
-                        println!("🗺️ Kademlia bootstrap failed: {:?}", e);
+                        warn!("Kademlia bootstrap failed: {:?}", e);
                     }
                     _ => {} // Handle other query results as needed
                 }
             }
             kad::Event::RoutingUpdated { peer, .. } => {
-                println!("🗺️ Kademlia routing table updated for peer: {}", peer);
+                debug!("Kademlia routing table updated for peer: {}", peer);
                 
                 // Send internal event
                 let _ = event_tx.send(NetworkEvent::PeerConnected(peer));
@@ -516,13 +517,8 @@ impl LibP2pNetworkService {
                 let domain_event = DomainEvent::PeerConnected { peer_id: domain_peer_id };
                 let _ = event_publisher.publish(domain_event).await;
             }
-            kad::Event::InboundRequest { request } => {
-                match request {
-                    kad::InboundRequest::FindNode { num_closer_peers, .. } => {
-                        println!("🗺️ Kademlia received FindNode request, returning {} peers", num_closer_peers);
-                    }
-                    _ => {}
-                }
+            kad::Event::InboundRequest { request: kad::InboundRequest::FindNode { num_closer_peers, .. } } => {
+                        debug!("Kademlia received FindNode request, returning {} peers", num_closer_peers);
             }
             _ => {} // Handle other Kademlia events as needed
         }
@@ -600,6 +596,31 @@ impl LibP2pNetworkService {
             .map_err(|e| format!("Failed to send mDNS start command: {}", e))?;
         Ok(())
     }
+
+    /// Collect network events for a fixed duration and return them.
+    /// This is useful for short-lived discovery flows from the CLI.
+    pub async fn collect_events_for(&self, duration: Duration) -> Vec<NetworkEvent> {
+        use tokio::time::{sleep, Instant};
+        let deadline = Instant::now() + duration;
+        let mut collected: Vec<NetworkEvent> = Vec::new();
+
+        loop {
+            {
+                let mut rx = self.event_rx.lock().await;
+                while let Ok(event) = rx.try_recv() {
+                    collected.push(event);
+                }
+            }
+
+            if Instant::now() >= deadline {
+                break;
+            }
+
+            sleep(Duration::from_millis(100)).await;
+        }
+
+        collected
+    }
 }
 
 #[async_trait]
@@ -655,7 +676,7 @@ impl SimpleNetworkService {
 
     /// Connect to a specific peer (mock implementation)
     pub async fn connect_to_peer(&self, addr: &str) -> DomainResult<()> {
-        println!("🔗 Connecting to peer at: {}", addr);
+        info!("Connecting to peer at: {}", addr);
         
         // Mock peer ID extraction from address
         let peer_id = format!("peer-at-{}", addr);
@@ -676,21 +697,25 @@ impl SimpleNetworkService {
     }
 }
 
+impl Default for SimpleNetworkService {
+    fn default() -> Self { Self::new() }
+}
+
 #[async_trait]
 impl NetworkService for SimpleNetworkService {
     async fn start_listening(&self, port: u16) -> DomainResult<()> {
-        println!("🚀 Simple network service listening on port {}", port);
-        println!("🆔 Local peer ID: {}", self.local_peer_id);
+        info!("Simple network service listening on port {}", port);
+        info!("Local peer ID: {}", self.local_peer_id);
         Ok(())
     }
 
     async fn send_message(&self, peer_id: &crate::core::domain::PeerId, _message: Vec<u8>) -> DomainResult<()> {
-        println!("📤 Sending message to peer: {}", peer_id.as_str());
+        debug!("Sending message to peer: {}", peer_id.as_str());
         Ok(())
     }
 
     async fn broadcast_message(&self, _message: Vec<u8>) -> DomainResult<()> {
-        println!("📡 Broadcasting message");
+        debug!("Broadcasting message");
         Ok(())
     }
 }
@@ -738,7 +763,7 @@ mod tests {
         assert!(network_service.is_ok());
         
         if let Ok(service) = network_service {
-            println!("✅ LibP2P service created with peer ID: {}", service.local_peer_id());
+            println!("LibP2P service created with peer ID: {}", service.local_peer_id());
         }
     }
 

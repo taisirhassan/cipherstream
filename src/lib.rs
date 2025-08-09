@@ -18,6 +18,8 @@ pub use core::domain::*;
 pub use core::traits::*;
 pub use application::{UseCases, ApplicationService, FileSystemService};
 pub use infrastructure::{AppConfig, NetworkServiceImpl, CryptoService, UtilityService, RepositoryBuilder};
+// Protocol re-exports for external users
+pub use file_transfer::{FileTransferCodec, FileTransferProtocol};
 
 // Re-export crypto module for backward compatibility with tests
 pub use core::crypto; 

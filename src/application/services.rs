@@ -114,6 +114,7 @@ impl FileService for FileSystemService {
         let mut file = tokio::fs::OpenOptions::new()
             .create(true)
             .write(true)
+            .truncate(false)
             .open(path)
             .await?;
         

@@ -14,7 +14,7 @@ use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use libp2p::{identity, PeerId as LibP2PPeerId};
 use std::collections::HashMap;
-use std::sync::RwLock;
+use tokio::sync::RwLock;
 
 /// Network service for P2P operations
 pub struct NetworkServiceImpl {
@@ -36,22 +36,26 @@ impl NetworkServiceImpl {
     }
 
     /// Add a discovered peer
-    pub fn add_discovered_peer(&self, peer_id: crate::core::domain::PeerId, addresses: Vec<String>) {
-        let mut peers = self.discovered_peers.write().unwrap();
+    pub async fn add_discovered_peer(&self, peer_id: crate::core::domain::PeerId, addresses: Vec<String>) {
+        let mut peers = self.discovered_peers.write().await;
         peers.insert(peer_id, addresses);
     }
 
     /// Get all discovered peers
-    pub fn get_discovered_peers(&self) -> HashMap<crate::core::domain::PeerId, Vec<String>> {
-        let peers = self.discovered_peers.read().unwrap();
+    pub async fn get_discovered_peers(&self) -> HashMap<crate::core::domain::PeerId, Vec<String>> {
+        let peers = self.discovered_peers.read().await;
         peers.clone()
     }
 
     /// Get addresses for a specific peer
-    pub fn get_peer_addresses(&self, peer_id: &crate::core::domain::PeerId) -> Option<Vec<String>> {
-        let peers = self.discovered_peers.read().unwrap();
+    pub async fn get_peer_addresses(&self, peer_id: &crate::core::domain::PeerId) -> Option<Vec<String>> {
+        let peers = self.discovered_peers.read().await;
         peers.get(peer_id).cloned()
     }
+}
+
+impl Default for NetworkServiceImpl {
+    fn default() -> Self { Self::new() }
 }
 
 #[async_trait]
@@ -174,12 +178,20 @@ impl CryptoService {
     /// Compute SHA-256 hash for a file
     pub async fn compute_file_hash<P: AsRef<Path>>(path: P) -> DomainResult<String> {
         let mut file = File::open(path).await.map_err(|_| "Failed to open file")?;
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).await.map_err(|_| "Failed to read file")?;
-        
-        let hash = digest::digest(&digest::SHA256, &buffer);
+        let mut context = digest::Context::new(&digest::SHA256);
+        let mut buffer = [0u8; 8192];
+        loop {
+            let count = file.read(&mut buffer).await.map_err(|_| "Failed to read file")?;
+            if count == 0 { break; }
+            context.update(&buffer[..count]);
+        }
+        let hash = context.finish();
         Ok(hex::encode(hash.as_ref()))
     }
+}
+
+impl Default for CryptoService {
+    fn default() -> Self { Self::new() }
 }
 
 /// Utility service for common file and system operations
@@ -248,7 +260,7 @@ impl UtilityService {
 
     /// Calculate the number of chunks for a file given a chunk size
     pub fn calculate_chunks(file_size: u64, chunk_size: usize) -> u64 {
-        (file_size + chunk_size as u64 - 1) / chunk_size as u64
+        file_size.div_ceil(chunk_size as u64)
     }
 
     /// Check if a file exists and get its size
@@ -268,3 +280,7 @@ impl UtilityService {
         Ok(())
     }
 } 
+
+impl Default for UtilityService {
+    fn default() -> Self { Self::new() }
+}

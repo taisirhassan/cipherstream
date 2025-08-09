@@ -83,6 +83,10 @@ impl FileId {
     }
 }
 
+impl Default for FileId {
+    fn default() -> Self { Self::new() }
+}
+
 /// Domain entity representing a file transfer
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transfer {
@@ -112,6 +116,10 @@ impl TransferId {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+}
+
+impl Default for TransferId {
+    fn default() -> Self { Self::new() }
 }
 
 /// Transfer status enumeration
@@ -183,7 +191,7 @@ pub enum DomainEvent {
     PeerDiscovered { peer: Peer },
     PeerConnected { peer_id: PeerId },
     PeerDisconnected { peer_id: PeerId },
-    TransferStarted { transfer: Transfer },
+    TransferStarted { transfer: Box<Transfer> },
     TransferProgress { transfer_id: TransferId, progress: TransferProgress },
     TransferCompleted { transfer_id: TransferId },
     TransferFailed { transfer_id: TransferId, reason: String },

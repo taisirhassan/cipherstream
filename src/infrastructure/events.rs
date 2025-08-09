@@ -1,5 +1,7 @@
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
+use tracing::{info, error};
+use futures::future::join_all;
 use async_trait::async_trait;
 use crate::core::{
     domain::DomainEvent,
@@ -8,7 +10,7 @@ use crate::core::{
 
 /// In-memory event publisher for testing and development
 pub struct InMemoryEventPublisher {
-    handlers: Arc<RwLock<Vec<Box<dyn EventHandler>>>>,
+    handlers: Arc<RwLock<Vec<Arc<dyn EventHandler>>>>,
     event_log: Arc<RwLock<Vec<DomainEvent>>>,
 }
 
@@ -31,18 +33,30 @@ impl InMemoryEventPublisher {
     }
 }
 
+impl Default for InMemoryEventPublisher {
+    fn default() -> Self { Self::new() }
+}
+
 #[async_trait]
 impl EventPublisher for InMemoryEventPublisher {
     async fn publish(&self, event: DomainEvent) -> DomainResult<()> {
         // Log the event
         self.event_log.write().await.push(event.clone());
 
-        // Notify all handlers
-        let handlers = self.handlers.read().await;
-        for handler in handlers.iter() {
-            if let Err(e) = handler.handle_event(event.clone()).await {
-                eprintln!("Error in event handler: {}", e);
-            }
+        // Notify all handlers. Clone Arcs first to avoid holding the lock across await.
+        let handlers_snapshot = {
+            let handlers = self.handlers.read().await;
+            handlers.clone()
+        };
+        let futures = handlers_snapshot
+            .into_iter()
+            .map(|h| {
+                let ev = event.clone();
+                async move { h.handle_event(ev).await }
+            });
+        let results = join_all(futures).await;
+        for res in results {
+            if let Err(e) = res { error!("Error in event handler: {}", e); }
         }
 
         Ok(())
@@ -50,9 +64,10 @@ impl EventPublisher for InMemoryEventPublisher {
 
     fn subscribe(&self, handler: Box<dyn EventHandler>) -> DomainResult<()> {
         // Note: This is blocking, but we're in a sync context
+        let handler_arc: Arc<dyn EventHandler> = Arc::from(handler);
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
-                self.handlers.write().await.push(handler);
+                self.handlers.write().await.push(handler_arc);
             })
         });
         Ok(())
@@ -62,7 +77,7 @@ impl EventPublisher for InMemoryEventPublisher {
 /// Async event publisher using channels for better performance
 pub struct ChannelEventPublisher {
     event_tx: mpsc::UnboundedSender<DomainEvent>,
-    handlers: Arc<RwLock<Vec<Box<dyn EventHandler>>>>,
+    handlers: Arc<RwLock<Vec<Arc<dyn EventHandler>>>>,
 }
 
 impl ChannelEventPublisher {
@@ -80,14 +95,20 @@ impl ChannelEventPublisher {
     /// Start the event processing loop
     pub async fn start_processing(
         mut event_rx: mpsc::UnboundedReceiver<DomainEvent>,
-        handlers: Arc<RwLock<Vec<Box<dyn EventHandler>>>>,
+        handlers: Arc<RwLock<Vec<Arc<dyn EventHandler>>>>,
     ) {
         while let Some(event) = event_rx.recv().await {
-            let handlers_guard = handlers.read().await;
-            for handler in handlers_guard.iter() {
-                if let Err(e) = handler.handle_event(event.clone()).await {
-                    eprintln!("Error in event handler: {}", e);
-                }
+            let snapshot = {
+                let handlers_guard = handlers.read().await;
+                handlers_guard.clone()
+            };
+            let futures = snapshot.into_iter().map(|h| {
+                let ev = event.clone();
+                async move { h.handle_event(ev).await }
+            });
+            let results = join_all(futures).await;
+            for res in results {
+                if let Err(e) = res { error!("Error in event handler: {}", e); }
             }
         }
     }
@@ -101,9 +122,10 @@ impl EventPublisher for ChannelEventPublisher {
     }
 
     fn subscribe(&self, handler: Box<dyn EventHandler>) -> DomainResult<()> {
+        let handler_arc: Arc<dyn EventHandler> = Arc::from(handler);
         tokio::task::block_in_place(|| {
             tokio::runtime::Handle::current().block_on(async {
-                self.handlers.write().await.push(handler);
+                self.handlers.write().await.push(handler_arc);
             })
         });
         Ok(())
@@ -118,31 +140,31 @@ impl EventHandler for LoggingEventHandler {
     async fn handle_event(&self, event: DomainEvent) -> DomainResult<()> {
         match &event {
             DomainEvent::PeerDiscovered { peer } => {
-                println!("🔍 Peer discovered: {} with {} addresses", 
+                info!("Peer discovered: {} with {} addresses", 
                     peer.id.as_str(), peer.addresses.len());
             }
             DomainEvent::PeerConnected { peer_id } => {
-                println!("🔗 Peer connected: {}", peer_id.as_str());
+                info!("Peer connected: {}", peer_id.as_str());
             }
             DomainEvent::PeerDisconnected { peer_id } => {
-                println!("❌ Peer disconnected: {}", peer_id.as_str());
+                info!("Peer disconnected: {}", peer_id.as_str());
             }
             DomainEvent::TransferStarted { transfer } => {
-                println!("📤 Transfer started: {} -> {}", 
+                info!("Transfer started: {} -> {}", 
                     transfer.sender.as_str(), transfer.receiver.as_str());
             }
             DomainEvent::TransferProgress { transfer_id, progress } => {
-                println!("📊 Transfer progress {}: {:.2}%", 
+                info!("Transfer progress {}: {:.2}%", 
                     transfer_id.as_str(), progress.percentage);
             }
             DomainEvent::TransferCompleted { transfer_id } => {
-                println!("✅ Transfer completed: {}", transfer_id.as_str());
+                info!("Transfer completed: {}", transfer_id.as_str());
             }
             DomainEvent::TransferFailed { transfer_id, reason } => {
-                println!("❌ Transfer failed {}: {}", transfer_id.as_str(), reason);
+                error!("Transfer failed {}: {}", transfer_id.as_str(), reason);
             }
             DomainEvent::ChunkReceived { transfer_id, chunk } => {
-                println!("📦 Chunk {} received for transfer {}", 
+                info!("Chunk {} received for transfer {}", 
                     chunk.index, transfer_id.as_str());
             }
         }

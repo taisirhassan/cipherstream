@@ -2,46 +2,46 @@
 
 Cipherstreams is a secure P2P file sharing application built with Rust and **libp2p**, featuring advanced networking protocols, cryptographic security, and comprehensive peer discovery capabilities.
 
-## 🚀 Production Status
+## Production Status
 
-**✅ FULLY OPERATIONAL** - Complete libp2p implementation with all advanced networking features:
+FULLY OPERATIONAL - Complete libp2p implementation with all advanced networking features:
 
-- **🏠 mDNS Discovery**: Automatic local network peer discovery  
-- **🗺️ Kademlia DHT**: Global peer routing and distributed hash table connectivity
-- **📡 Gossipsub Messaging**: Topic-based publish-subscribe communication
-- **🔗 Request-Response**: Direct peer-to-peer file transfer protocol  
-- **🆔 Identify Protocol**: Peer identification and capability discovery
-- **🔒 Secure Transport**: TCP + Noise encryption + Yamux multiplexing
+- mDNS Discovery: Automatic local network peer discovery  
+- Kademlia DHT: Global peer routing and distributed hash table connectivity
+- Gossipsub Messaging: Topic-based publish-subscribe communication
+- Request-Response: Direct peer-to-peer file transfer protocol  
+- Identify Protocol: Peer identification and capability discovery
+- Secure Transport: TCP + Noise encryption + Yamux multiplexing
 
-## ⭐ Key Features
+## Key Features
 
-### 🌐 **Advanced Peer-to-Peer Networking**
+### Advanced Peer-to-Peer Networking
 Built on **libp2p 0.55** - the same networking stack powering **Ethereum**, **IPFS**, **Filecoin**, and **Optimism**
 
 - **Multi-layer Discovery**: 
-  - 🏠 **Local Discovery** via mDNS (same WiFi/LAN)
-  - 🗺️ **Global Discovery** via Kademlia DHT (internet-wide)
+- Local Discovery via mDNS (same WiFi/LAN)
+- Global Discovery via Kademlia DHT (internet-wide)
 - **Production-grade Protocols**: All 5 core libp2p protocols integrated and operational
 - **Bootstrap Integration**: Automatic connection to IPFS bootstrap nodes for global DHT participation
 
-### 🔐 **Enterprise-Grade Security**
+###  **Enterprise-Grade Security**
 - **End-to-End Encryption**: AES-256-GCM with hardware acceleration via `ring` crate
 - **Digital Signatures**: Ed25519 signatures for file integrity and authenticity  
 - **Secure Transport**: Noise protocol for connection-level encryption
 - **Identity Verification**: Cryptographic peer identity validation
 
-### 📁 **Optimized File Transfer**
-- **Chunked Transfer**: Efficient handling of large files with resumable transfers
-- **File Integrity**: SHA-256 checksums for corruption detection
-- **Multiple Protocols**: Request-response for direct transfers, gossipsub for announcements
+### Optimized File Transfer
+- Chunked Transfer: Efficient handling of large files with resumable transfers
+- File Integrity: SHA-256 checksums for corruption detection
+- Multiple Protocols: Request-response for direct transfers, gossipsub for announcements
 
-### 🏗️ **Clean Architecture**
-- **Domain-Driven Design**: Clear separation between business logic and infrastructure
-- **Async-First**: Built on Tokio for high-performance concurrent operations  
-- **Modular Design**: Extensible architecture with repository pattern and dependency injection
-- **Comprehensive Testing**: 54+ tests covering all components with 100% compilation success
+### Clean Architecture
+- Domain-Driven Design: Clear separation between business logic and infrastructure
+- Async-First: Built on Tokio for high-performance concurrent operations  
+- Modular Design: Extensible architecture with repository pattern and dependency injection
+- Comprehensive Testing: 54+ tests covering all components with 100% compilation success
 
-## 📊 Network Architecture
+##  Network Architecture
 
 ### Advanced libp2p 0.55 Protocol Stack
 
@@ -51,7 +51,7 @@ Built on **libp2p 0.55** - the same networking stack powering **Ethereum**, **IP
 ├─────────────────────────────────────────────────────┤
 │  File Transfer Protocol (Custom)                    │
 ├─────────────────────────────────────────────────────┤
-│  🆕 mDNS  │  🆕 Kademlia  │  Gossipsub  │  Req/Resp │  Protocol Layer
+│  mDNS  │  Kademlia  │  Gossipsub  │  Req/Resp │  Protocol Layer
 │  Local    │  Global DHT   │  Pub/Sub    │  Direct   │
 │  Discovery│  Routing      │  Messaging  │  Transfer │
 ├─────────────────────────────────────────────────────┤
@@ -67,22 +67,22 @@ Built on **libp2p 0.55** - the same networking stack powering **Ethereum**, **IP
 └─────────────────────────────────────────────────────┘
 ```
 
-### 🔥 Real-World Network Performance
+### Real-World Network Performance
 
 **Live Logs from Production Run:**
 ```bash
-🆔 Local peer id: 12D3KooWELTKN6YQKcUPRTnjGtsEkAWJhckjiR2HfDEVtLAtyidQ
-🗺️ Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN  
-🗺️ Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
-🗺️ Kademlia routing table updated for peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
-🗺️ Kademlia bootstrap initiated successfully
-🗺️ Kademlia bootstrap complete - connected to DHT network  
-🏠 mDNS discovered peer: 12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA
-📡 Listening on /ip4/127.0.0.1/tcp/8000
-📡 Listening on /ip4/192.168.2.110/tcp/8000
+Local peer id: 12D3KooWELTKN6YQKcUPRTnjGtsEkAWJhckjiR2HfDEVtLAtyidQ
+Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN  
+Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+Kademlia routing table updated for peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+Kademlia bootstrap initiated successfully
+Kademlia bootstrap complete - connected to DHT network  
+mDNS discovered peer: 12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA
+Listening on /ip4/127.0.0.1/tcp/8000
+Listening on /ip4/192.168.2.110/tcp/8000
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Rust 1.70+** with Cargo
@@ -100,10 +100,10 @@ cargo build --release
 cargo run -- start --port 8000
 
 # Expected output:
-# 🆔 Local peer id: 12D3KooW...
-# 🗺️ Kademlia bootstrap complete - connected to DHT network
-# 🏠 mDNS discovered peer: [local peers on your network]
-# 📡 Listening on /ip4/127.0.0.1/tcp/8000
+# Local peer id: 12D3KooW...
+# Kademlia bootstrap complete - connected to DHT network
+# mDNS discovered peer: [local peers on your network]
+# Listening on /ip4/127.0.0.1/tcp/8000
 ```
 
 ### Start Multiple Nodes for Testing
@@ -118,7 +118,7 @@ cargo run -- start --port 8001
 # Watch them automatically discover each other via mDNS!
 ```
 
-## 💻 Advanced Usage Examples
+## Advanced Usage Examples
 
 ### Basic Network Operations
 
@@ -192,14 +192,14 @@ let file_hash = crypto::compute_file_hash("document.pdf").await?;
 println!("SHA-256: {}", file_hash);
 ```
 
-## 🧪 Comprehensive Testing
+## Comprehensive Testing
 
 ### Test Suite Coverage
 
 ```bash
 cargo test
 
-# Results: ✅ 54 tests passing
+# Results: 54 tests passing
 running 16 tests (unit tests)
 running 5 tests (codec tests)  
 running 7 tests (crypto error handling)
@@ -228,11 +228,38 @@ test test_hash_performance ... ok (100 MB/sec)
 - File chunking: 1MB chunks, optimized for network MTU
 ```
 
-## 📈 Development Status
+## Development Status
+## Logging & Diagnostics
 
-### ✅ **Completed Features **
+- Control log verbosity with env or CLI:
+  - `CIPHERSTREAM_LOG_LEVEL=debug cargo run -- start --port 8000`
+  - `cargo run -- --quiet start` (forces warn-level)
+- Enable JSON logs for production by setting:
+  - `CIPHERSTREAM_LOG_FORMAT=json` (see below)
 
-#### **🌐 Advanced Networking (libp2p 0.55)**
+### JSON log output
+
+Set `CIPHERSTREAM_LOG_FORMAT=json` to switch the console layer to JSON (useful for log aggregation).
+Set `CIPHERSTREAM_LOG_FILE_FORMAT=json` to emit JSON logs to file.
+Set `CIPHERSTREAM_LOG_ROLL=hourly|daily` to control file rotation (default: daily).
+
+### Profiling & Benchmarks
+
+- Install flamegraph: `cargo install flamegraph`
+- Run flamegraph: `cargo flamegraph -- cargo run -- start --port 8000`
+- Criterion benches: `cargo bench` (see `benches/codec_bench.rs`)
+  - Added benches: `hash_bench.rs`, `request_response_bench.rs`
+
+## Persistence Backend
+
+- Default backend: in-memory repositories.
+- Enable sled durable backend by setting:
+  - `CIPHERSTREAM_REPO_BACKEND=sled`
+  - Optional path: `CIPHERSTREAM_DB_PATH=".cipherstream_db"` (default value)
+
+### Completed Features
+
+#### Advanced Networking (libp2p 0.55)
 - **mDNS Local Discovery**: Automatic peer discovery on LAN/WiFi networks
 - **Kademlia DHT**: Global peer routing with IPFS bootstrap integration  
 - **Gossipsub Messaging**: Topic-based publish-subscribe communication
@@ -240,13 +267,13 @@ test test_hash_performance ... ok (100 MB/sec)
 - **Identify Protocol**: Peer identification and capability advertising
 - **Secure Transport**: TCP + Noise encryption + Yamux multiplexing
 
-#### **🔐 Security & Cryptography**
+####  Security & Cryptography
 - **AES-256-GCM**: Hardware-accelerated file encryption  
 - **Ed25519**: Digital signatures for integrity and authenticity
 - **SHA-256**: File hashing for corruption detection
 - **Noise Protocol**: Connection-level encryption and authentication
 
-#### **🏗️ Core Architecture**
+#### Core Architecture
 - **Domain-Driven Design**: Clean separation of concerns
 - **Repository Pattern**: Data persistence abstraction
 - **Event-Driven Architecture**: Pub/sub domain events
@@ -254,81 +281,81 @@ test test_hash_performance ... ok (100 MB/sec)
 - **Configuration Management**: Environment-based configuration
 - **Comprehensive Error Handling**: Type-safe error propagation
 
-### 🔄 **Next Development Phase**
+### Next Development Phase
 
-#### **📁 File Transfer Implementation**
+#### File Transfer Implementation
 - **SendFile Use Case**: Complete peer-to-peer file transfer workflow
 - **ReceiveFile Use Case**: File reception with progress tracking  
 - **Transfer Progress**: Real-time progress updates and resumption capability
 
-#### **🖥️ Enhanced User Interface** 
+#### ** Enhanced User Interface** 
 - **CLI Improvements**: Rich peer management and transfer commands
 - **Interactive Mode**: Real-time network status and peer monitoring
 
-### 📋 **Future Enhancements**
+###  **Future Enhancements**
 
-#### **⚡ Performance Optimizations**
+#### Performance Optimizations
 - **Connection Pooling**: Persistent peer connections for repeated transfers
 - **Multi-peer Distribution**: Swarming downloads from multiple sources
 - **Advanced Features**: File indexing, metadata storage, directory sync
 
-## 🔧 Dependencies & Technology Stack
+##  Dependencies & Technology Stack
 
 ### **Core Dependencies**
 
 ```toml
 [dependencies]
-# 🌐 Advanced Networking
+# Advanced Networking
 libp2p = { version = "0.55.0", features = [
     "tokio", "gossipsub", "mdns", "kad", "identify", 
     "ping", "noise", "tcp", "yamux", "quic", 
     "request-response", "relay", "tls", "dns"
 ]}
 
-# ⚡ Async Runtime  
+# Async Runtime  
 tokio = { version = "1", features = ["full"] }
 
-# 🔐 Cryptography
+#  Cryptography
 ring = "0.16"           # Hardware-accelerated crypto
 sha2 = "0.10"           # SHA-256 hashing
 
-# 📦 Serialization
+#  Serialization
 serde = { version = "1.0", features = ["derive"] }
 bincode = "2.0.1"       # Binary protocol serialization
 
-# 🖥️ CLI Interface
+#  CLI Interface
 clap = { version = "4.5", features = ["derive"] }
 
-# 📊 Logging & Monitoring
+#  Logging & Monitoring
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
 ```
 
-## 🌟 Why CipherStream?
+## Why CipherStream?
 
-### **Production-Grade libp2p Implementation**
+### Production-Grade libp2p Implementation
 
 CipherStream leverages **libp2p 0.55** - the same networking foundation trusted by:
-- **🔗 Ethereum**: Blockchain peer-to-peer networking
-- **📁 IPFS**: Distributed file system protocol  
-- **💰 Filecoin**: Decentralized storage network
-- **⚡ Optimism**: Layer 2 scaling solution
+- Ethereum: Blockchain peer-to-peer networking
+- IPFS: Distributed file system protocol  
+- Filecoin: Decentralized storage network
+- Optimism: Layer 2 scaling solution
 
 ### **Advanced Peer Discovery Capabilities**
 
-- **🏠 Local Networks**: Zero-config discovery via mDNS on WiFi/LAN
-- **🗺️ Global Networks**: Internet-wide peer routing via Kademlia DHT  
-- **🔄 Hybrid Discovery**: Automatic fallback between local and global discovery
-- **📡 Real-time Updates**: Dynamic peer join/leave detection
+- Local Networks: Zero-config discovery via mDNS on WiFi/LAN
+- Global Networks: Internet-wide peer routing via Kademlia DHT  
+- Hybrid Discovery: Automatic fallback between local and global discovery
+- Real-time Updates: Dynamic peer join/leave detection
 
 ### **Enterprise Security Standards**
 
-- **🔒 End-to-End Encryption**: AES-256-GCM with hardware acceleration
-- **✅ Digital Signatures**: Ed25519 for tamper-proof file integrity
-- **🛡️ Transport Security**: Noise protocol for connection-level protection
-- **🔑 Identity Verification**: Cryptographic peer authentication
+- End-to-End Encryption: AES-256-GCM with hardware acceleration
+- Digital Signatures: Ed25519 for tamper-proof file integrity
+- Transport Security: Noise protocol for connection-level protection
+- Identity Verification: Cryptographic peer authentication
 
-## 📄 Contributing
+##  Contributing
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
@@ -343,21 +370,21 @@ CipherStream leverages **libp2p 0.55** - the same networking foundation trusted 
 - **Documentation**: Public APIs must be documented
 - **Performance**: Benchmark critical paths for regression detection
 
-## 📄 License
+##  License
 
 This project is licensed under the **MIT License** - see the LICENSE file for details.
 
 ---
 
-## 🎯 **Current Status: PRODUCTION READY**
+## Current Status: PRODUCTION READY
 
-✅ **All 54 tests passing**  
-✅ **Complete libp2p 0.55 advanced networking**  
-✅ **Kademlia DHT fully operational**  
-✅ **mDNS local discovery working**  
-✅ **Secure crypto operations validated**  
-✅ **Clean architecture implemented**  
+All 54 tests passing  
+Complete libp2p 0.55 advanced networking  
+Kademlia DHT fully operational  
+mDNS local discovery working  
+Secure crypto operations validated  
+Clean architecture implemented  
 
-**Ready for peer-to-peer file sharing with the most advanced networking stack available.** 🚀
+Ready for peer-to-peer file sharing with the most advanced networking stack available.
 
 *Built with ❤️ using Rust, libp2p 0.55, and modern async programming practices.* 

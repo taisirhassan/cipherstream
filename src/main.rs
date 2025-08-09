@@ -1,10 +1,11 @@
 use clap::{Parser, Subcommand};
-use log::{info, error};
+use tracing::{info, error};
 use std::path::PathBuf;
 use std::error::Error;
+use std::time::Duration;
 
 // Added for tracing file logging
-use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt, Layer};
 use tracing_appender::non_blocking::WorkerGuard;
 
 // Use new modular structure
@@ -17,6 +18,9 @@ use cipherstream::{
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    /// Reduce console logging noise (overrides env log level to warnings)
+    #[arg(long, global = true, default_value_t = false)]
+    quiet: bool,
     #[command(subcommand)]
     command: Commands,
 }
@@ -51,27 +55,60 @@ enum Commands {
     },
     /// List discovered peers
     Peers,
+    /// Discover peers for a short period and print events
+    Discover {
+        /// Duration in seconds to listen for discovery events
+        #[arg(short = 'd', long = "duration", default_value_t = 5)]
+        duration_secs: u64,
+        /// Port to bind temporarily (helpful if no node is running)
+        #[arg(short, long, default_value_t = 8000)]
+        port: u16,
+    },
 }
 
 // Function to initialize tracing and file logging
 // Returns a WorkerGuard that must be kept alive for logs to be written
-fn init_logging(log_file_prefix: &str) -> Result<WorkerGuard, Box<dyn Error>> {
+fn init_logging(log_file_prefix: &str, quiet: bool) -> Result<WorkerGuard, Box<dyn Error>> {
     // Create a directory for logs if it doesn't exist
     std::fs::create_dir_all("logs")?;
 
-    let file_appender = tracing_appender::rolling::daily("logs", log_file_prefix);
+    // File rotation policy
+    let roll_env = std::env::var("CIPHERSTREAM_LOG_ROLL").unwrap_or_else(|_| "daily".to_string());
+    let file_appender = match roll_env.as_str() {
+        "hourly" => tracing_appender::rolling::hourly("logs", log_file_prefix),
+        _ => tracing_appender::rolling::daily("logs", log_file_prefix),
+    };
     let (non_blocking_appender, guard) = tracing_appender::non_blocking(file_appender);
 
-    let file_layer = fmt::layer()
-        .with_writer(non_blocking_appender)
-        .with_ansi(false); // Don't use ANSI codes in files
+    // File format (text or json)
+    let file_json = std::env::var("CIPHERSTREAM_LOG_FILE_FORMAT").ok().as_deref() == Some("json");
+    let file_layer = if file_json {
+        fmt::layer().json().with_writer(non_blocking_appender).with_ansi(false).boxed()
+    } else {
+        fmt::layer().with_writer(non_blocking_appender).with_ansi(false).boxed()
+    };
 
-    let console_layer = fmt::layer()
-        .with_writer(std::io::stdout);
+    let console_json = std::env::var("CIPHERSTREAM_LOG_FORMAT").ok().as_deref() == Some("json");
+    // Build console layer with a uniform type by boxing the layer
+    let console_layer = if console_json {
+        fmt::layer().json().with_writer(std::io::stdout).boxed()
+    } else {
+        fmt::layer().with_writer(std::io::stdout).boxed()
+    };
 
-    // Use RUST_LOG env var, default to info for self and warn for others
-    let filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info,libp2p_swarm=warn"));
+    // Determine log level with priority:
+    // 1) quiet flag -> force warnings
+    // 2) CIPHERSTREAM_LOG_LEVEL env var
+    // 3) RUST_LOG env var
+    // 4) sensible default
+    let filter = if quiet {
+        EnvFilter::new("warn,libp2p_swarm=warn")
+    } else if let Ok(level) = std::env::var("CIPHERSTREAM_LOG_LEVEL") {
+        EnvFilter::new(format!("{level},libp2p_swarm=warn"))
+    } else {
+        EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("info,libp2p_swarm=warn"))
+    };
 
     tracing_subscriber::registry()
         .with(filter)
@@ -85,26 +122,27 @@ fn init_logging(log_file_prefix: &str) -> Result<WorkerGuard, Box<dyn Error>> {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // env_logger::init(); // Replaced by tracing setup
-    
+    let cli = Cli::parse();
+
     // Determine log file prefix based on command (basic example)
     // This guard needs to stay in scope, otherwise logs stop writing.
-    let _guard = init_logging("cipherstream_node")?;
-
-    let cli = Cli::parse();
+    let _guard = init_logging("cipherstream_node", cli.quiet)?;
     
     match cli.command {
         Commands::Start { port, data_dir } => {
             info!("Starting node on port {}...", port);
             
             // Create application configuration
-            let mut config = AppConfig::default();
-            config.default_port = port;
-            config.data_directory = data_dir.clone();
-            config.download_directory = format!("{}/downloads", data_dir);
+            let config = AppConfig {
+                default_port: port,
+                data_directory: data_dir.clone(),
+                download_directory: format!("{}/downloads", data_dir),
+                ..AppConfig::default()
+            };
             
             // Initialize application service
             let app_service = ApplicationService::new(config.clone()).await?;
-            info!("📁 Using data directory: {}", app_service.config().data_directory);
+            info!("Using data directory: {}", app_service.config().data_directory);
             
             // Initialize event publisher
             let event_publisher = std::sync::Arc::new(InMemoryEventPublisher::new());
@@ -116,12 +154,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
             ).await.map_err(|e| format!("Failed to create network service: {}", e))?;
             
             let peer_id = network_service.local_peer_id();
-            info!("🆔 Local peer id: {}", peer_id);
+            info!("Local peer id: {}", peer_id);
             
             // Start the network service
             network_service.start_listening(port).await
                 .map_err(|e| format!("Failed to start listening: {}", e))?;
-            info!("🚀 Node started on port {}", port);
+            info!("Node started on port {}", port);
             
             // Keep the process running
             loop {
@@ -164,6 +202,49 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("Peer discovery is available when the node is running.");
             println!("To see connected peers, start a node with: cargo run -- start --port 8000");
             println!("The node will automatically discover and connect to other peers in the network.");
+        }
+        Commands::Discover { duration_secs, port } => {
+            info!("Discovering peers for {} seconds on port {}...", duration_secs, port);
+
+            // Minimal ephemeral setup to leverage the network service
+            let config = AppConfig { default_port: port, ..AppConfig::default() };
+            let event_publisher = std::sync::Arc::new(InMemoryEventPublisher::new());
+            let network_service = LibP2pNetworkService::new(
+                std::sync::Arc::new(config),
+                event_publisher,
+            )
+            .await
+            .map_err(|e| format!("Failed to create network service: {}", e))?;
+
+            network_service
+                .start_listening(port)
+                .await
+                .map_err(|e| format!("Failed to start listening: {}", e))?;
+
+            let events = network_service
+                .collect_events_for(Duration::from_secs(duration_secs))
+                .await;
+
+            println!("Discovered {} events:", events.len());
+            for ev in events {
+                match ev {
+                    cipherstream::infrastructure::network::NetworkEvent::PeerConnected(pid) => {
+                        println!("Peer connected: {}", pid);
+                    }
+                    cipherstream::infrastructure::network::NetworkEvent::PeerDisconnected(pid) => {
+                        println!("Peer disconnected: {}", pid);
+                    }
+                    cipherstream::infrastructure::network::NetworkEvent::GossipMessage { from, topic, .. } => {
+                        println!("Gossip message from {} on topic {}", from, topic);
+                    }
+                    cipherstream::infrastructure::network::NetworkEvent::FileTransferRequest { from, .. } => {
+                        println!("File transfer request from {}", from);
+                    }
+                    cipherstream::infrastructure::network::NetworkEvent::FileTransferResponse { from, .. } => {
+                        println!("File transfer response from {}", from);
+                    }
+                }
+            }
         }
     }
     

@@ -25,8 +25,7 @@ libp2p = { version = "0.55.0", features = [
 ]}
 tokio = { version = "1", features = ["full"] }
 futures = "0.3" # Required by libp2p examples and useful for async
-env_logger = "0.11" # For logging
-log = "0.4" # Logging facade
+log = "0.4"
 serde = { version = "1.0", features = ["derive"] } # For serialization
 serde_json = "1.0" # For JSON serialization (e.g., messages)
 thiserror = "1.0" # For easier error handling
@@ -47,7 +46,21 @@ tracing = "0.1"
 tracing-appender = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
 lazy_static = "1.4.0"
+sled = "0.34"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
 tempfile = "3.10.1"
+criterion = { version = "0.5", features = ["async"] }
+
+[[bench]]
+name = "codec_bench"
+harness = false
+
+[[bench]]
+name = "hash_bench"
+harness = false
+
+[[bench]]
+name = "request_response_bench"
+harness = false

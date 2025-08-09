@@ -25,7 +25,7 @@ RECEIVER_PID=$!
 sleep 5
 
 # Extract peer ID from logs
-RECEIVER_PEER_ID=$(grep -oE "🆔 Local peer id: [0-9a-zA-Z]+" $TEST_DIR/node1.log | cut -d' ' -f4)
+RECEIVER_PEER_ID=$(grep -oE "Local peer id: [0-9A-Za-z]+" $TEST_DIR/node1.log | awk '{print $4}')
 if [ -z "$RECEIVER_PEER_ID" ]; then
     echo "Failed to get peer ID from receiver node"
     kill $RECEIVER_PID
@@ -44,12 +44,12 @@ echo "Waiting for transfer to complete (max 30 seconds)..."
 TIMEOUT=30
 while [ $TIMEOUT -gt 0 ]; do
     if grep -q "File transfer completed" $TEST_DIR/sender.log; then
-        echo "✅ File transfer reported as successful!"
+        echo "File transfer reported as successful!"
         break
     fi
     
     if grep -q "Failed to send file" $TEST_DIR/sender.log; then
-        echo "❌ File transfer reported as failed!"
+        echo "File transfer reported as failed!"
         break
     fi
     
@@ -58,7 +58,7 @@ while [ $TIMEOUT -gt 0 ]; do
 done
 
 if [ $TIMEOUT -eq 0 ]; then
-    echo "❌ Timeout waiting for file transfer to complete"
+    echo "Timeout waiting for file transfer to complete"
 fi
 
 # Verify files match if they exist
@@ -68,12 +68,12 @@ if [ -n "$RECEIVED_FILE" ]; then
     
     # Compare files
     if cmp -s "$TEST_DIR/test_file.bin" "$RECEIVED_FILE"; then
-        echo "✅ Files match! Transfer was successful."
+        echo "Files match! Transfer was successful."
     else
-        echo "❌ Files don't match. Transfer was corrupted."
+        echo "Files don't match. Transfer was corrupted."
     fi
 else
-    echo "❌ Received file not found."
+    echo "Received file not found."
 fi
 
 # Clean up

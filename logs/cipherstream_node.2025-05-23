@@ -1,36 +1,36 @@
 2025-05-23T04:54:25.328550Z  INFO cipherstream: Starting node on port 10000...    
-2025-05-23T04:54:25.328736Z  INFO cipherstream: 📁 Using data directory: test_data/node2_1747976056    
-2025-05-23T04:54:25.329439Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWCNwA8AZkkHE3encSejf2pyvtuMu9q8YGdyAZ54QfpBVi    
-2025-05-23T04:54:25.329452Z  INFO cipherstream: 🚀 Node started on port 10000    
+2025-05-23T04:54:25.328736Z  INFO cipherstream: Using data directory: test_data/node2_1747976056    
+2025-05-23T04:54:25.329439Z  INFO cipherstream: Local peer id: 12D3KooWCNwA8AZkkHE3encSejf2pyvtuMu9q8YGdyAZ54QfpBVi    
+2025-05-23T04:54:25.329452Z  INFO cipherstream: Node started on port 10000    
 2025-05-23T04:54:25.329458Z  INFO cipherstream: Note: Full network functionality pending - this is the new modular architecture!    
 2025-05-23T04:54:25.767293Z  INFO cipherstream: Starting node on port 10001...    
-2025-05-23T04:54:25.767492Z  INFO cipherstream: 📁 Using data directory: test_data/node1_1747976056    
-2025-05-23T04:54:25.768194Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWB68jBRQyGXqPEjPN8VQVnWjdTK5RxR2yukLJsXVLr3mj    
-2025-05-23T04:54:25.768208Z  INFO cipherstream: 🚀 Node started on port 10001    
+2025-05-23T04:54:25.767492Z  INFO cipherstream: Using data directory: test_data/node1_1747976056    
+2025-05-23T04:54:25.768194Z  INFO cipherstream: Local peer id: 12D3KooWB68jBRQyGXqPEjPN8VQVnWjdTK5RxR2yukLJsXVLr3mj    
+2025-05-23T04:54:25.768208Z  INFO cipherstream: Node started on port 10001    
 2025-05-23T04:54:25.768215Z  INFO cipherstream: Note: Full network functionality pending - this is the new modular architecture!    
 2025-05-23T04:54:37.326000Z  INFO cipherstream: File transfer functionality will be implemented with new modular architecture    
 2025-05-23T04:54:37.326043Z  INFO cipherstream: Target peer: 12D3KooWCNwA8AZkkHE3encSejf2pyvtuMu9q8YGdyAZ54QfpBVi    
 2025-05-23T04:54:37.326053Z  INFO cipherstream: File: "test_file.txt"    
 2025-05-23T04:54:37.326581Z  INFO cipherstream: File hash: 262c4d84e4796cf8aff7d2f5b6dd4e531d14c431493938cf2a75f5b02e21c321    
 2025-05-23T05:09:46.902675Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:09:46.903219Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:09:46.903984Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWF31FnW1K8XEu7m5ZmNuogDaHSdtKRntYy9KFD9qyZXh9    
-2025-05-23T05:09:46.903997Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:09:46.903219Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:09:46.903984Z  INFO cipherstream: Local peer id: 12D3KooWF31FnW1K8XEu7m5ZmNuogDaHSdtKRntYy9KFD9qyZXh9    
+2025-05-23T05:09:46.903997Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:09:46.904004Z  INFO cipherstream: Note: Full network functionality pending - this is the new modular architecture!    
 2025-05-23T05:16:41.107903Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:16:41.108034Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:16:41.108748Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWKeYhfVQ6wXUMVYCCfA69bgZdagEkKu598ErtaZVjcTAZ    
-2025-05-23T05:16:41.108758Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:16:41.108034Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:16:41.108748Z  INFO cipherstream: Local peer id: 12D3KooWKeYhfVQ6wXUMVYCCfA69bgZdagEkKu598ErtaZVjcTAZ    
+2025-05-23T05:16:41.108758Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:16:41.108764Z  INFO cipherstream: Note: Full network functionality pending - this is the new modular architecture!    
 2025-05-23T05:16:51.709289Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:16:51.709429Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:16:51.710141Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWAm8xRitMn11K8nPS8v45YMePqTSGTszGcQuySw9RuqEG    
-2025-05-23T05:16:51.710154Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:16:51.709429Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:16:51.710141Z  INFO cipherstream: Local peer id: 12D3KooWAm8xRitMn11K8nPS8v45YMePqTSGTszGcQuySw9RuqEG    
+2025-05-23T05:16:51.710154Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:16:51.710163Z  INFO cipherstream: Note: Full network functionality pending - this is the new modular architecture!    
 2025-05-23T05:20:56.599320Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:20:56.600235Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:20:56.605813Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWE1A6AhuGfh8bGdA2WC63FYeEJKcVunfNTGpVVSf4MLZ6    
-2025-05-23T05:20:56.605924Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:20:56.600235Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:20:56.605813Z  INFO cipherstream: Local peer id: 12D3KooWE1A6AhuGfh8bGdA2WC63FYeEJKcVunfNTGpVVSf4MLZ6    
+2025-05-23T05:20:56.605924Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:21:56.609659Z  INFO cipherstream: Node is running...    
 2025-05-23T05:22:56.612382Z  INFO cipherstream: Node is running...    
 2025-05-23T05:23:56.614791Z  INFO cipherstream: Node is running...    
@@ -44,15 +44,15 @@
 2025-05-23T05:31:56.635822Z  INFO cipherstream: Node is running...    
 2025-05-23T05:32:56.642857Z  INFO cipherstream: Node is running...    
 2025-05-23T05:33:10.001286Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:33:10.003064Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:33:10.010856Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA    
-2025-05-23T05:33:10.010964Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:33:10.003064Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:33:10.010856Z  INFO cipherstream: Local peer id: 12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA    
+2025-05-23T05:33:10.010964Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:33:10.011165Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
 2025-05-23T05:33:10.518888Z  WARN libp2p_kad::behaviour: Failed to trigger bootstrap: No known peers.
 2025-05-23T05:33:12.835269Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:33:12.836803Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:33:12.844989Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWN8P7qeiiKSagmYCkT7kWvrhJbyJnWXNidLFpV5sKkqzx    
-2025-05-23T05:33:12.845134Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:33:12.836803Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:33:12.844989Z  INFO cipherstream: Local peer id: 12D3KooWN8P7qeiiKSagmYCkT7kWvrhJbyJnWXNidLFpV5sKkqzx    
+2025-05-23T05:33:12.845134Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:33:12.845470Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
 2025-05-23T05:33:12.848298Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWN8P7qeiiKSagmYCkT7kWvrhJbyJnWXNidLFpV5sKkqzx address=/ip4/192.168.2.110/tcp/8000/p2p/12D3KooWN8P7qeiiKSagmYCkT7kWvrhJbyJnWXNidLFpV5sKkqzx
 2025-05-23T05:33:12.848583Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA address=/ip4/192.168.2.110/tcp/8000/p2p/12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA
@@ -62,9 +62,9 @@
 2025-05-23T05:34:56.650841Z  INFO cipherstream: Node is running...    
 2025-05-23T05:35:10.018905Z  INFO cipherstream: Node is running...    
 2025-05-23T05:35:46.143766Z  INFO cipherstream: Starting node on port 8000...    
-2025-05-23T05:35:46.145270Z  INFO cipherstream: 📁 Using data directory: .cipherstream    
-2025-05-23T05:35:46.154594Z  INFO cipherstream: 🆔 Local peer id: 12D3KooWELTKN6YQKcUPRTnjGtsEkAWJhckjiR2HfDEVtLAtyidQ    
-2025-05-23T05:35:46.154675Z  INFO cipherstream: 🚀 Node started on port 8000    
+2025-05-23T05:35:46.145270Z  INFO cipherstream: Using data directory: .cipherstream    
+2025-05-23T05:35:46.154594Z  INFO cipherstream: Local peer id: 12D3KooWELTKN6YQKcUPRTnjGtsEkAWJhckjiR2HfDEVtLAtyidQ    
+2025-05-23T05:35:46.154675Z  INFO cipherstream: Node started on port 8000    
 2025-05-23T05:35:46.154828Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
 2025-05-23T05:35:46.161523Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA address=/ip4/192.168.2.110/tcp/8000/p2p/12D3KooWReuGhuVKjHRD19xP1hTXmJWBwNYPkWXqET2ucoJpzRMA
 2025-05-23T05:35:46.161711Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWELTKN6YQKcUPRTnjGtsEkAWJhckjiR2HfDEVtLAtyidQ address=/ip4/192.168.2.110/tcp/8000/p2p/12D3KooWELTKN6YQKcUPRTnjGtsEkAWJhckjiR2HfDEVtLAtyidQ

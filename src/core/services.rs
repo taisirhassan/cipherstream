@@ -61,10 +61,10 @@ impl TransferDomainService {
 
         // Calculate chunks
         const CHUNK_SIZE: u64 = 1024 * 1024; // 1MB
-        let total_chunks = (file_size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+        let total_chunks: u64 = file_size.div_ceil(CHUNK_SIZE);
 
         // Create transfer entity
-        let transfer = Transfer {
+        let transfer: Transfer = Transfer {
             id: TransferId::new(),
             file: file.clone(),
             sender,
@@ -81,7 +81,7 @@ impl TransferDomainService {
 
         // Publish event
         self.event_publisher.publish(DomainEvent::TransferStarted { 
-            transfer: transfer.clone() 
+            transfer: Box::new(transfer.clone())
         }).await?;
 
         Ok(transfer)
