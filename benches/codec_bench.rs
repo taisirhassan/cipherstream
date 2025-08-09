@@ -1,5 +1,5 @@
-use criterion::{criterion_group, criterion_main, Criterion, black_box};
 use cipherstream::file_transfer::{FileTransferCodec, FileTransferProtocol, ProtocolRequest};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use futures::io::Cursor;
 use libp2p::request_response::Codec;
 
@@ -20,7 +20,10 @@ fn bench_codec_request_roundtrip(c: &mut Criterion) {
             // write phase
             futures::executor::block_on(async {
                 let mut w = Cursor::new(&mut buf);
-                let _ = codec.write_request(&protocol, &mut w, request.clone()).await.unwrap();
+                codec
+                    .write_request(&protocol, &mut w, request.clone())
+                    .await
+                    .unwrap();
             });
             // read phase
             futures::executor::block_on(async {
@@ -34,4 +37,3 @@ fn bench_codec_request_roundtrip(c: &mut Criterion) {
 
 criterion_group!(benches, bench_codec_request_roundtrip);
 criterion_main!(benches);
-

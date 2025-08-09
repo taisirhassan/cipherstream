@@ -1,8 +1,8 @@
+use crate::core::{domain::*, traits::*};
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use async_trait::async_trait;
-use crate::core::{domain::*, traits::*};
 
 /// In-memory repository for files (could be replaced with database implementation)
 pub struct InMemoryFileRepository {
@@ -18,7 +18,9 @@ impl InMemoryFileRepository {
 }
 
 impl Default for InMemoryFileRepository {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[async_trait]
@@ -70,7 +72,9 @@ impl InMemoryTransferRepository {
 }
 
 impl Default for InMemoryTransferRepository {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[async_trait]
@@ -110,13 +114,22 @@ impl TransferRepository for InMemoryTransferRepository {
         let transfers = self.transfers.read().await;
         let active_transfers: Vec<Transfer> = transfers
             .values()
-            .filter(|transfer| matches!(transfer.status, TransferStatus::InProgress | TransferStatus::Pending))
+            .filter(|transfer| {
+                matches!(
+                    transfer.status,
+                    TransferStatus::InProgress | TransferStatus::Pending
+                )
+            })
             .cloned()
             .collect();
         Ok(active_transfers)
     }
 
-    async fn update_transfer_status(&self, id: &TransferId, status: TransferStatus) -> DomainResult<()> {
+    async fn update_transfer_status(
+        &self,
+        id: &TransferId,
+        status: TransferStatus,
+    ) -> DomainResult<()> {
         let mut transfers = self.transfers.write().await;
         if let Some(transfer) = transfers.get_mut(id) {
             transfer.status = status;
@@ -124,7 +137,11 @@ impl TransferRepository for InMemoryTransferRepository {
         Ok(())
     }
 
-    async fn update_transfer_progress(&self, id: &TransferId, progress: TransferProgress) -> DomainResult<()> {
+    async fn update_transfer_progress(
+        &self,
+        id: &TransferId,
+        progress: TransferProgress,
+    ) -> DomainResult<()> {
         let mut transfers = self.transfers.write().await;
         if let Some(transfer) = transfers.get_mut(id) {
             transfer.progress = progress;
@@ -147,7 +164,9 @@ impl InMemoryPeerRepository {
 }
 
 impl Default for InMemoryPeerRepository {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[async_trait]
@@ -178,7 +197,11 @@ impl PeerRepository for InMemoryPeerRepository {
         Ok(peers.values().cloned().collect())
     }
 
-    async fn update_peer_connection_status(&self, id: &PeerId, connected: bool) -> DomainResult<()> {
+    async fn update_peer_connection_status(
+        &self,
+        id: &PeerId,
+        connected: bool,
+    ) -> DomainResult<()> {
         let mut peers = self.peers.write().await;
         if let Some(peer) = peers.get_mut(id) {
             peer.is_connected = connected;
@@ -194,7 +217,11 @@ impl RepositoryBuilder {
     pub fn build_file_repository() -> Arc<dyn FileRepository> {
         match std::env::var("CIPHERSTREAM_REPO_BACKEND").ok().as_deref() {
             Some("sled") => {
-                if let Ok(repo) = SledFileRepository::new() { Arc::new(repo) } else { Arc::new(InMemoryFileRepository::new()) }
+                if let Ok(repo) = SledFileRepository::new() {
+                    Arc::new(repo)
+                } else {
+                    Arc::new(InMemoryFileRepository::new())
+                }
             }
             _ => Arc::new(InMemoryFileRepository::new()),
         }
@@ -203,7 +230,11 @@ impl RepositoryBuilder {
     pub fn build_transfer_repository() -> Arc<dyn TransferRepository> {
         match std::env::var("CIPHERSTREAM_REPO_BACKEND").ok().as_deref() {
             Some("sled") => {
-                if let Ok(repo) = SledTransferRepository::new() { Arc::new(repo) } else { Arc::new(InMemoryTransferRepository::new()) }
+                if let Ok(repo) = SledTransferRepository::new() {
+                    Arc::new(repo)
+                } else {
+                    Arc::new(InMemoryTransferRepository::new())
+                }
             }
             _ => Arc::new(InMemoryTransferRepository::new()),
         }
@@ -212,12 +243,16 @@ impl RepositoryBuilder {
     pub fn build_peer_repository() -> Arc<dyn PeerRepository> {
         match std::env::var("CIPHERSTREAM_REPO_BACKEND").ok().as_deref() {
             Some("sled") => {
-                if let Ok(repo) = SledPeerRepository::new() { Arc::new(repo) } else { Arc::new(InMemoryPeerRepository::new()) }
+                if let Ok(repo) = SledPeerRepository::new() {
+                    Arc::new(repo)
+                } else {
+                    Arc::new(InMemoryPeerRepository::new())
+                }
             }
             _ => Arc::new(InMemoryPeerRepository::new()),
         }
     }
-} 
+}
 
 // Durable repositories backed by sled
 pub struct SledStores {
@@ -229,12 +264,18 @@ pub struct SledStores {
 
 impl SledStores {
     fn open() -> Result<Self, Box<dyn std::error::Error>> {
-        let path = std::env::var("CIPHERSTREAM_DB_PATH").unwrap_or_else(|_| ".cipherstream_db".to_string());
+        let path = std::env::var("CIPHERSTREAM_DB_PATH")
+            .unwrap_or_else(|_| ".cipherstream_db".to_string());
         let db = sled::open(path)?;
         let files = db.open_tree("files")?;
         let transfers = db.open_tree("transfers")?;
         let peers = db.open_tree("peers")?;
-        Ok(Self { _db: db, files, transfers, peers })
+        Ok(Self {
+            _db: db,
+            files,
+            transfers,
+            peers,
+        })
     }
 }
 
@@ -243,7 +284,11 @@ pub struct SledFileRepository {
 }
 
 impl SledFileRepository {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> { Ok(Self { store: SledStores::open()? }) }
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            store: SledStores::open()?,
+        })
+    }
 }
 
 #[async_trait]
@@ -267,16 +312,29 @@ impl FileRepository for SledFileRepository {
         let name = name.to_string();
         let files = self.store.files.clone();
         let entries: Vec<File> = tokio::task::spawn_blocking(move || {
-            files.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<File>(&v).ok()).filter(|f| f.name.contains(&name)).collect()
-        }).await?;
+            files
+                .iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<File>(&v).ok())
+                .filter(|f| f.name.contains(&name))
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
     async fn list_all_files(&self) -> DomainResult<Vec<File>> {
         let files = self.store.files.clone();
         let entries: Vec<File> = tokio::task::spawn_blocking(move || {
-            files.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<File>(&v).ok()).collect()
-        }).await?;
+            files
+                .iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<File>(&v).ok())
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
@@ -293,7 +351,11 @@ pub struct SledTransferRepository {
 }
 
 impl SledTransferRepository {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> { Ok(Self { store: SledStores::open()? }) }
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            store: SledStores::open()?,
+        })
+    }
 }
 
 #[async_trait]
@@ -317,8 +379,14 @@ impl TransferRepository for SledTransferRepository {
         let sender_id = sender.as_str().to_string();
         let t = self.store.transfers.clone();
         let entries: Vec<Transfer> = tokio::task::spawn_blocking(move || {
-            t.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<Transfer>(&v).ok()).filter(|tr| tr.sender.as_str() == sender_id).collect()
-        }).await?;
+            t.iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<Transfer>(&v).ok())
+                .filter(|tr| tr.sender.as_str() == sender_id)
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
@@ -326,20 +394,41 @@ impl TransferRepository for SledTransferRepository {
         let receiver_id = receiver.as_str().to_string();
         let t = self.store.transfers.clone();
         let entries: Vec<Transfer> = tokio::task::spawn_blocking(move || {
-            t.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<Transfer>(&v).ok()).filter(|tr| tr.receiver.as_str() == receiver_id).collect()
-        }).await?;
+            t.iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<Transfer>(&v).ok())
+                .filter(|tr| tr.receiver.as_str() == receiver_id)
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
     async fn list_active_transfers(&self) -> DomainResult<Vec<Transfer>> {
         let t = self.store.transfers.clone();
         let entries: Vec<Transfer> = tokio::task::spawn_blocking(move || {
-            t.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<Transfer>(&v).ok()).filter(|tr| matches!(tr.status, TransferStatus::InProgress | TransferStatus::Pending)).collect()
-        }).await?;
+            t.iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<Transfer>(&v).ok())
+                .filter(|tr| {
+                    matches!(
+                        tr.status,
+                        TransferStatus::InProgress | TransferStatus::Pending
+                    )
+                })
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
-    async fn update_transfer_status(&self, id: &TransferId, status: TransferStatus) -> DomainResult<()> {
+    async fn update_transfer_status(
+        &self,
+        id: &TransferId,
+        status: TransferStatus,
+    ) -> DomainResult<()> {
         if let Some(mut tr) = self.find_transfer_by_id(id).await? {
             tr.status = status;
             self.save_transfer(&tr).await?
@@ -347,7 +436,11 @@ impl TransferRepository for SledTransferRepository {
         Ok(())
     }
 
-    async fn update_transfer_progress(&self, id: &TransferId, progress: TransferProgress) -> DomainResult<()> {
+    async fn update_transfer_progress(
+        &self,
+        id: &TransferId,
+        progress: TransferProgress,
+    ) -> DomainResult<()> {
         if let Some(mut tr) = self.find_transfer_by_id(id).await? {
             tr.progress = progress;
             self.save_transfer(&tr).await?
@@ -361,7 +454,11 @@ pub struct SledPeerRepository {
 }
 
 impl SledPeerRepository {
-    pub fn new() -> Result<Self, Box<dyn std::error::Error>> { Ok(Self { store: SledStores::open()? }) }
+    pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            store: SledStores::open()?,
+        })
+    }
 }
 
 #[async_trait]
@@ -384,20 +481,35 @@ impl PeerRepository for SledPeerRepository {
     async fn list_connected_peers(&self) -> DomainResult<Vec<Peer>> {
         let p = self.store.peers.clone();
         let entries: Vec<Peer> = tokio::task::spawn_blocking(move || {
-            p.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<Peer>(&v).ok()).filter(|peer| peer.is_connected).collect()
-        }).await?;
+            p.iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<Peer>(&v).ok())
+                .filter(|peer| peer.is_connected)
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
     async fn list_all_peers(&self) -> DomainResult<Vec<Peer>> {
         let p = self.store.peers.clone();
         let entries: Vec<Peer> = tokio::task::spawn_blocking(move || {
-            p.iter().values().filter_map(|res| res.ok()).filter_map(|v| serde_json::from_slice::<Peer>(&v).ok()).collect()
-        }).await?;
+            p.iter()
+                .values()
+                .filter_map(|res| res.ok())
+                .filter_map(|v| serde_json::from_slice::<Peer>(&v).ok())
+                .collect()
+        })
+        .await?;
         Ok(entries)
     }
 
-    async fn update_peer_connection_status(&self, id: &PeerId, connected: bool) -> DomainResult<()> {
+    async fn update_peer_connection_status(
+        &self,
+        id: &PeerId,
+        connected: bool,
+    ) -> DomainResult<()> {
         if let Some(mut peer) = self.find_peer_by_id(id).await? {
             peer.is_connected = connected;
             self.save_peer(&peer).await?

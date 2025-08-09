@@ -12,11 +12,11 @@ impl PeerId {
     pub fn new(id: String) -> Self {
         Self { id }
     }
-    
+
     pub fn from_string(id: String) -> Self {
         Self { id }
     }
-    
+
     pub fn as_str(&self) -> &str {
         &self.id
     }
@@ -24,7 +24,9 @@ impl PeerId {
 
 impl From<libp2p::PeerId> for PeerId {
     fn from(peer_id: libp2p::PeerId) -> Self {
-        Self { id: peer_id.to_string() }
+        Self {
+            id: peer_id.to_string(),
+        }
     }
 }
 
@@ -73,18 +75,20 @@ impl FileId {
     pub fn new() -> Self {
         Self(Uuid::new_v4().to_string())
     }
-    
+
     pub fn from_string(id: String) -> Self {
         Self(id)
     }
-    
+
     pub fn as_str(&self) -> &str {
         &self.0
     }
 }
 
 impl Default for FileId {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Domain entity representing a file transfer
@@ -108,18 +112,20 @@ impl TransferId {
     pub fn new() -> Self {
         Self(Uuid::new_v4().to_string())
     }
-    
+
     pub fn from_string(id: String) -> Self {
         Self(id)
     }
-    
+
     pub fn as_str(&self) -> &str {
         &self.0
     }
 }
 
 impl Default for TransferId {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Transfer status enumeration
@@ -152,7 +158,7 @@ impl TransferProgress {
             percentage: 0.0,
         }
     }
-    
+
     pub fn update(&mut self, bytes_transferred: u64, chunks_transferred: u64) {
         self.bytes_transferred = bytes_transferred;
         self.chunks_transferred = chunks_transferred;
@@ -162,7 +168,7 @@ impl TransferProgress {
             0.0
         };
     }
-    
+
     pub fn is_complete(&self) -> bool {
         self.bytes_transferred >= self.total_bytes && self.chunks_transferred >= self.total_chunks
     }
@@ -188,12 +194,31 @@ pub struct Chunk {
 /// Domain events that can occur in the system
 #[derive(Debug, Clone)]
 pub enum DomainEvent {
-    PeerDiscovered { peer: Peer },
-    PeerConnected { peer_id: PeerId },
-    PeerDisconnected { peer_id: PeerId },
-    TransferStarted { transfer: Box<Transfer> },
-    TransferProgress { transfer_id: TransferId, progress: TransferProgress },
-    TransferCompleted { transfer_id: TransferId },
-    TransferFailed { transfer_id: TransferId, reason: String },
-    ChunkReceived { transfer_id: TransferId, chunk: Chunk },
-} 
+    PeerDiscovered {
+        peer: Peer,
+    },
+    PeerConnected {
+        peer_id: PeerId,
+    },
+    PeerDisconnected {
+        peer_id: PeerId,
+    },
+    TransferStarted {
+        transfer: Box<Transfer>,
+    },
+    TransferProgress {
+        transfer_id: TransferId,
+        progress: TransferProgress,
+    },
+    TransferCompleted {
+        transfer_id: TransferId,
+    },
+    TransferFailed {
+        transfer_id: TransferId,
+        reason: String,
+    },
+    ChunkReceived {
+        transfer_id: TransferId,
+        chunk: Chunk,
+    },
+}

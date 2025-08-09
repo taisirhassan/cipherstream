@@ -1,5 +1,5 @@
+use bincode::{Decode, Encode};
 use serde::{Deserialize, Serialize};
-use bincode::{Encode, Decode};
 
 /// Protocol request types for file transfer operations
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Encode, Decode)]
@@ -19,9 +19,7 @@ pub enum ProtocolRequest {
         is_last: bool,
     },
     /// Cancel an ongoing transfer
-    CancelTransfer {
-        transfer_id: String,
-    },
+    CancelTransfer { transfer_id: String },
 }
 
 /// Protocol response types for file transfer operations
@@ -55,4 +53,4 @@ pub struct FileMetadata {
     pub size: u64,
     pub checksum: String,
     pub encrypted: bool,
-} 
+}

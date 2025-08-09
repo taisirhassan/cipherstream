@@ -1,6 +1,6 @@
-use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
 use crate::core::traits::Configuration;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 /// Application configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,7 +37,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
         let data_dir = format!("{}/.cipherstream", home);
-        
+
         Self {
             data_directory: data_dir.clone(),
             download_directory: format!("{}/downloads", data_dir),
@@ -114,11 +114,11 @@ impl AppConfig {
         if self.chunk_size == 0 {
             return Err("Chunk size must be greater than 0".into());
         }
-        
+
         if self.max_concurrent_transfers == 0 {
             return Err("Max concurrent transfers must be greater than 0".into());
         }
-        
+
         if self.default_port == 0 {
             return Err("Default port must be greater than 0".into());
         }
@@ -173,4 +173,4 @@ mod tests {
         let json = serde_json::to_string(&config).expect("Should serialize");
         let _deserialized: AppConfig = serde_json::from_str(&json).expect("Should deserialize");
     }
-} 
+}

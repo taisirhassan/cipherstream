@@ -1,6 +1,6 @@
+use super::domain::*;
 use async_trait::async_trait;
 use std::error::Error;
-use super::domain::*;
 
 /// Result type for domain operations
 pub type DomainResult<T> = Result<T, Box<dyn Error + Send + Sync>>;
@@ -23,8 +23,16 @@ pub trait TransferRepository: Send + Sync {
     async fn find_transfers_by_sender(&self, sender: &PeerId) -> DomainResult<Vec<Transfer>>;
     async fn find_transfers_by_receiver(&self, receiver: &PeerId) -> DomainResult<Vec<Transfer>>;
     async fn list_active_transfers(&self) -> DomainResult<Vec<Transfer>>;
-    async fn update_transfer_status(&self, id: &TransferId, status: TransferStatus) -> DomainResult<()>;
-    async fn update_transfer_progress(&self, id: &TransferId, progress: TransferProgress) -> DomainResult<()>;
+    async fn update_transfer_status(
+        &self,
+        id: &TransferId,
+        status: TransferStatus,
+    ) -> DomainResult<()>;
+    async fn update_transfer_progress(
+        &self,
+        id: &TransferId,
+        progress: TransferProgress,
+    ) -> DomainResult<()>;
 }
 
 /// Repository trait for peer operations
@@ -34,7 +42,8 @@ pub trait PeerRepository: Send + Sync {
     async fn find_peer_by_id(&self, id: &PeerId) -> DomainResult<Option<Peer>>;
     async fn list_connected_peers(&self) -> DomainResult<Vec<Peer>>;
     async fn list_all_peers(&self) -> DomainResult<Vec<Peer>>;
-    async fn update_peer_connection_status(&self, id: &PeerId, connected: bool) -> DomainResult<()>;
+    async fn update_peer_connection_status(&self, id: &PeerId, connected: bool)
+    -> DomainResult<()>;
 }
 
 /// Service trait for file operations
@@ -96,4 +105,4 @@ pub trait Configuration: Send + Sync {
     fn get_default_port(&self) -> u16;
     fn get_max_concurrent_transfers(&self) -> usize;
     fn get_chunk_size(&self) -> usize;
-} 
+}

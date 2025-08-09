@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use std::time::SystemTime;
 use super::domain::*;
 use super::traits::*;
+use std::sync::Arc;
+use std::time::SystemTime;
 
 /// Domain service for managing file transfers
 pub struct TransferDomainService {
@@ -37,9 +37,12 @@ impl TransferDomainService {
         receiver: PeerId,
     ) -> DomainResult<Transfer> {
         // Verify receiver exists and is connected
-        let peer = self.peer_repo.find_peer_by_id(&receiver).await?
+        let peer = self
+            .peer_repo
+            .find_peer_by_id(&receiver)
+            .await?
             .ok_or("Receiver peer not found")?;
-        
+
         if !peer.is_connected {
             return Err("Receiver peer is not connected".into());
         }
@@ -47,7 +50,7 @@ impl TransferDomainService {
         // Get file metadata
         let (file_name, file_size) = self.file_service.get_file_metadata(file_path).await?;
         let file_hash = self.file_service.calculate_file_hash(file_path).await?;
-        
+
         // Create file entity
         let file = File {
             id: FileId::new(),
@@ -80,16 +83,21 @@ impl TransferDomainService {
         self.transfer_repo.save_transfer(&transfer).await?;
 
         // Publish event
-        self.event_publisher.publish(DomainEvent::TransferStarted { 
-            transfer: Box::new(transfer.clone())
-        }).await?;
+        self.event_publisher
+            .publish(DomainEvent::TransferStarted {
+                transfer: Box::new(transfer.clone()),
+            })
+            .await?;
 
         Ok(transfer)
     }
 
     /// Accept an incoming transfer
     pub async fn accept_transfer(&self, transfer_id: &TransferId) -> DomainResult<()> {
-        let mut transfer = self.transfer_repo.find_transfer_by_id(transfer_id).await?
+        let mut transfer = self
+            .transfer_repo
+            .find_transfer_by_id(transfer_id)
+            .await?
             .ok_or("Transfer not found")?;
 
         match transfer.status {
@@ -98,7 +106,7 @@ impl TransferDomainService {
                 self.transfer_repo.save_transfer(&transfer).await?;
                 Ok(())
             }
-            _ => Err("Transfer is not in pending state".into())
+            _ => Err("Transfer is not in pending state".into()),
         }
     }
 
@@ -109,23 +117,32 @@ impl TransferDomainService {
         bytes_transferred: u64,
         chunks_transferred: u64,
     ) -> DomainResult<()> {
-        let mut transfer = self.transfer_repo.find_transfer_by_id(transfer_id).await?
+        let mut transfer = self
+            .transfer_repo
+            .find_transfer_by_id(transfer_id)
+            .await?
             .ok_or("Transfer not found")?;
 
-        transfer.progress.update(bytes_transferred, chunks_transferred);
-        
+        transfer
+            .progress
+            .update(bytes_transferred, chunks_transferred);
+
         if transfer.progress.is_complete() {
             transfer.status = TransferStatus::Completed;
             transfer.completed_at = Some(SystemTime::now());
-            
-            self.event_publisher.publish(DomainEvent::TransferCompleted { 
-                transfer_id: transfer_id.clone() 
-            }).await?;
+
+            self.event_publisher
+                .publish(DomainEvent::TransferCompleted {
+                    transfer_id: transfer_id.clone(),
+                })
+                .await?;
         } else {
-            self.event_publisher.publish(DomainEvent::TransferProgress { 
-                transfer_id: transfer_id.clone(),
-                progress: transfer.progress.clone()
-            }).await?;
+            self.event_publisher
+                .publish(DomainEvent::TransferProgress {
+                    transfer_id: transfer_id.clone(),
+                    progress: transfer.progress.clone(),
+                })
+                .await?;
         }
 
         self.transfer_repo.save_transfer(&transfer).await?;
@@ -134,7 +151,10 @@ impl TransferDomainService {
 
     /// Cancel a transfer
     pub async fn cancel_transfer(&self, transfer_id: &TransferId) -> DomainResult<()> {
-        let mut transfer = self.transfer_repo.find_transfer_by_id(transfer_id).await?
+        let mut transfer = self
+            .transfer_repo
+            .find_transfer_by_id(transfer_id)
+            .await?
             .ok_or("Transfer not found")?;
 
         match transfer.status {
@@ -179,10 +199,10 @@ impl PeerDomainService {
         };
 
         self.peer_repo.save_peer(&peer).await?;
-        
-        self.event_publisher.publish(DomainEvent::PeerDiscovered { 
-            peer: peer.clone() 
-        }).await?;
+
+        self.event_publisher
+            .publish(DomainEvent::PeerDiscovered { peer: peer.clone() })
+            .await?;
 
         Ok(())
     }
@@ -193,12 +213,18 @@ impl PeerDomainService {
         peer_id: &PeerId,
         connected: bool,
     ) -> DomainResult<()> {
-        self.peer_repo.update_peer_connection_status(peer_id, connected).await?;
+        self.peer_repo
+            .update_peer_connection_status(peer_id, connected)
+            .await?;
 
         let event = if connected {
-            DomainEvent::PeerConnected { peer_id: peer_id.clone() }
+            DomainEvent::PeerConnected {
+                peer_id: peer_id.clone(),
+            }
         } else {
-            DomainEvent::PeerDisconnected { peer_id: peer_id.clone() }
+            DomainEvent::PeerDisconnected {
+                peer_id: peer_id.clone(),
+            }
         };
 
         self.event_publisher.publish(event).await?;
@@ -218,10 +244,7 @@ pub struct FileDomainService {
 }
 
 impl FileDomainService {
-    pub fn new(
-        file_repo: Arc<dyn FileRepository>,
-        file_service: Arc<dyn FileService>,
-    ) -> Self {
+    pub fn new(file_repo: Arc<dyn FileRepository>, file_service: Arc<dyn FileService>) -> Self {
         Self {
             file_repo,
             file_service,
@@ -244,4 +267,4 @@ impl FileDomainService {
     pub async fn find_file(&self, file_id: &FileId) -> DomainResult<Option<File>> {
         self.file_repo.find_file_by_id(file_id).await
     }
-} 
+}

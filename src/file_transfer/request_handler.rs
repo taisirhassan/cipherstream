@@ -1,9 +1,9 @@
-use libp2p::request_response::{Codec, ProtocolSupport};
-use async_trait::async_trait;
-use futures::io::{AsyncRead, AsyncWrite, AsyncReadExt, AsyncWriteExt};
-use std::io;
 use super::types::{ProtocolRequest, ProtocolResponse};
+use async_trait::async_trait;
 use bincode::config;
+use futures::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use libp2p::request_response::{Codec, ProtocolSupport};
+use std::io;
 
 /// Protocol identifier for file transfer
 #[derive(Debug, Clone)]
@@ -16,7 +16,9 @@ impl FileTransferProtocol {
 }
 
 impl Default for FileTransferProtocol {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AsRef<str> for FileTransferProtocol {
@@ -80,7 +82,10 @@ impl Codec for FileTransferCodec {
                 if len > MAX_HANDSHAKE_SIZE {
                     return Err(io::Error::new(
                         io::ErrorKind::InvalidData,
-                        format!("handshake frame too large: {} > {}", len, MAX_HANDSHAKE_SIZE),
+                        format!(
+                            "handshake frame too large: {} > {}",
+                            len, MAX_HANDSHAKE_SIZE
+                        ),
                     ));
                 }
             }
@@ -175,4 +180,4 @@ impl Codec for FileTransferCodec {
 
         Ok(())
     }
-} 
+}

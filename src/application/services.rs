@@ -1,17 +1,17 @@
-use std::sync::Arc;
 use crate::core::traits::*;
-use crate::infrastructure::{repositories::*, config::AppConfig, UtilityService};
+use crate::infrastructure::{UtilityService, config::AppConfig, repositories::*};
+use std::sync::Arc;
 
 /// Application service that provides dependency injection and orchestrates the system
 pub struct ApplicationService {
     pub config: Arc<AppConfig>,
     // pub use_cases: Arc<super::UseCases>,
-    
+
     // Domain services
     // pub transfer_service: Arc<TransferDomainService>,
     // pub peer_service: Arc<PeerDomainService>,
     // pub file_service: Arc<FileDomainService>,
-    
+
     // Repositories
     pub file_repository: Arc<dyn FileRepository>,
     pub transfer_repository: Arc<dyn TransferRepository>,
@@ -24,7 +24,7 @@ impl ApplicationService {
         // Validate and prepare configuration
         config.validate()?;
         config.ensure_directories()?;
-        
+
         let config = Arc::new(config);
 
         // Create repositories
@@ -53,9 +53,7 @@ pub struct FileSystemService {
 
 impl FileSystemService {
     pub fn new(config: Arc<AppConfig>) -> Self {
-        Self { 
-            _config: config,
-        }
+        Self { _config: config }
     }
 }
 
@@ -64,7 +62,7 @@ impl FileService for FileSystemService {
     async fn add_file(&self, path: &str) -> DomainResult<crate::core::domain::File> {
         let (name, size) = self.get_file_metadata(path).await?;
         let hash = self.calculate_file_hash(path).await?;
-        
+
         Ok(crate::core::domain::File {
             id: crate::core::domain::FileId::new(),
             name,
@@ -85,43 +83,43 @@ impl FileService for FileSystemService {
     async fn get_file_metadata(&self, path: &str) -> DomainResult<(String, u64)> {
         let path_buf = std::path::Path::new(path);
         let metadata = tokio::fs::metadata(path).await?;
-        
+
         let name = path_buf
             .file_name()
             .ok_or("Invalid filename")?
             .to_string_lossy()
             .to_string();
-        
+
         Ok((name, metadata.len()))
     }
 
     async fn read_file_chunk(&self, path: &str, offset: u64, size: usize) -> DomainResult<Vec<u8>> {
         use tokio::io::{AsyncReadExt, AsyncSeekExt};
-        
+
         let mut file = tokio::fs::File::open(path).await?;
         file.seek(std::io::SeekFrom::Start(offset)).await?;
-        
+
         let mut buffer = vec![0u8; size];
         let bytes_read = file.read(&mut buffer).await?;
         buffer.truncate(bytes_read);
-        
+
         Ok(buffer)
     }
 
     async fn write_file_chunk(&self, path: &str, offset: u64, data: &[u8]) -> DomainResult<()> {
-        use tokio::io::{AsyncWriteExt, AsyncSeekExt};
-        
+        use tokio::io::{AsyncSeekExt, AsyncWriteExt};
+
         let mut file = tokio::fs::OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(false)
             .open(path)
             .await?;
-        
+
         file.seek(std::io::SeekFrom::Start(offset)).await?;
         file.write_all(data).await?;
         file.flush().await?;
-        
+
         Ok(())
     }
-} 
+}

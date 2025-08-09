@@ -50,4 +50,4 @@ pub struct SendFileResponse {
 pub struct ErrorResponse {
     pub error: String,
     pub details: Option<String>,
-} 
+}

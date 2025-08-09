@@ -14,12 +14,14 @@ pub mod file_transfer;
 pub mod protocol;
 
 // Re-export specific items to avoid ambiguous glob re-exports
+pub use application::{ApplicationService, FileSystemService, UseCases};
 pub use core::domain::*;
 pub use core::traits::*;
-pub use application::{UseCases, ApplicationService, FileSystemService};
-pub use infrastructure::{AppConfig, NetworkServiceImpl, CryptoService, UtilityService, RepositoryBuilder};
+pub use infrastructure::{
+    AppConfig, CryptoService, NetworkServiceImpl, RepositoryBuilder, UtilityService,
+};
 // Protocol re-exports for external users
 pub use file_transfer::{FileTransferCodec, FileTransferProtocol};
 
 // Re-export crypto module for backward compatibility with tests
-pub use core::crypto; 
+pub use core::crypto;

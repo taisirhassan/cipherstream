@@ -1,19 +1,19 @@
-// Infrastructure services - placeholder for now 
+// Infrastructure services - placeholder for now
 
-use std::sync::Arc;
-use async_trait::async_trait;
 use crate::core::traits::*;
+use async_trait::async_trait;
+use libp2p::{PeerId as LibP2PPeerId, identity};
 use ring::{
-    aead::{self, UnboundKey, AES_256_GCM},
+    aead::{self, AES_256_GCM, UnboundKey},
+    digest,
     rand::{SecureRandom, SystemRandom},
     signature::{self, Ed25519KeyPair, KeyPair},
-    digest,
 };
+use std::collections::HashMap;
 use std::path::Path;
+use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
-use libp2p::{identity, PeerId as LibP2PPeerId};
-use std::collections::HashMap;
 use tokio::sync::RwLock;
 
 /// Network service for P2P operations
@@ -36,7 +36,11 @@ impl NetworkServiceImpl {
     }
 
     /// Add a discovered peer
-    pub async fn add_discovered_peer(&self, peer_id: crate::core::domain::PeerId, addresses: Vec<String>) {
+    pub async fn add_discovered_peer(
+        &self,
+        peer_id: crate::core::domain::PeerId,
+        addresses: Vec<String>,
+    ) {
         let mut peers = self.discovered_peers.write().await;
         peers.insert(peer_id, addresses);
     }
@@ -48,14 +52,19 @@ impl NetworkServiceImpl {
     }
 
     /// Get addresses for a specific peer
-    pub async fn get_peer_addresses(&self, peer_id: &crate::core::domain::PeerId) -> Option<Vec<String>> {
+    pub async fn get_peer_addresses(
+        &self,
+        peer_id: &crate::core::domain::PeerId,
+    ) -> Option<Vec<String>> {
         let peers = self.discovered_peers.read().await;
         peers.get(peer_id).cloned()
     }
 }
 
 impl Default for NetworkServiceImpl {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[async_trait]
@@ -66,7 +75,11 @@ impl crate::core::traits::NetworkService for NetworkServiceImpl {
         Ok(())
     }
 
-    async fn send_message(&self, _peer_id: &crate::core::domain::PeerId, _message: Vec<u8>) -> DomainResult<()> {
+    async fn send_message(
+        &self,
+        _peer_id: &crate::core::domain::PeerId,
+        _message: Vec<u8>,
+    ) -> DomainResult<()> {
         // This would integrate with the legacy network module functionality
         // For now, return Ok as a placeholder
         Ok(())
@@ -100,20 +113,22 @@ impl CryptoService {
         // Generate a random nonce
         let mut nonce_bytes = [0u8; 12];
         let rng = SystemRandom::new();
-        rng.fill(&mut nonce_bytes).map_err(|_| "Encryption failed")?;
-        
+        rng.fill(&mut nonce_bytes)
+            .map_err(|_| "Encryption failed")?;
+
         let unbound_key = UnboundKey::new(&AES_256_GCM, key).map_err(|_| "Invalid key")?;
         let aead_key = aead::LessSafeKey::new(unbound_key);
         let nonce = aead::Nonce::assume_unique_for_key(nonce_bytes);
-        
+
         let mut in_out = data.to_vec();
-        aead_key.seal_in_place_append_tag(nonce, aead::Aad::empty(), &mut in_out)
+        aead_key
+            .seal_in_place_append_tag(nonce, aead::Aad::empty(), &mut in_out)
             .map_err(|_| "Encryption failed")?;
-        
+
         // Prepend nonce to encrypted data
         let mut result = nonce_bytes.to_vec();
         result.extend_from_slice(&in_out);
-        
+
         Ok(result)
     }
 
@@ -125,8 +140,7 @@ impl CryptoService {
         }
         let (nonce_bytes, ciphertext_and_tag) = encrypted.split_at(12);
 
-        let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key)
-            .map_err(|_| "Invalid key")?;
+        let unbound = aead::UnboundKey::new(&aead::AES_256_GCM, key).map_err(|_| "Invalid key")?;
         let aead_key = aead::LessSafeKey::new(unbound);
 
         let mut nonce_arr = [0u8; 12];
@@ -143,32 +157,33 @@ impl CryptoService {
     /// Generate an Ed25519 signing keypair
     pub fn generate_signing_keypair() -> DomainResult<(Vec<u8>, Vec<u8>)> {
         let rng = SystemRandom::new();
-        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng)
-            .map_err(|_| "Failed to generate keypair")?;
-        let key_pair = Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref())
-            .map_err(|_| "Invalid key")?;
-        
+        let pkcs8_bytes =
+            Ed25519KeyPair::generate_pkcs8(&rng).map_err(|_| "Failed to generate keypair")?;
+        let key_pair =
+            Ed25519KeyPair::from_pkcs8(pkcs8_bytes.as_ref()).map_err(|_| "Invalid key")?;
+
         let private_key = pkcs8_bytes.as_ref().to_vec();
         let public_key = key_pair.public_key().as_ref().to_vec();
-        
+
         Ok((private_key, public_key))
     }
 
     /// Sign a message using an Ed25519 private key
     pub fn sign_message(message: &[u8], private_key: &[u8]) -> DomainResult<Vec<u8>> {
-        let key_pair = Ed25519KeyPair::from_pkcs8(private_key)
-            .map_err(|_| "Invalid private key")?;
+        let key_pair =
+            Ed25519KeyPair::from_pkcs8(private_key).map_err(|_| "Invalid private key")?;
         let signature = key_pair.sign(message);
         Ok(signature.as_ref().to_vec())
     }
 
     /// Verify a signature using an Ed25519 public key
-    pub fn verify_signature(message: &[u8], signature: &[u8], public_key: &[u8]) -> DomainResult<bool> {
-        let peer_public_key = signature::UnparsedPublicKey::new(
-            &signature::ED25519,
-            public_key,
-        );
-        
+    pub fn verify_signature(
+        message: &[u8],
+        signature: &[u8],
+        public_key: &[u8],
+    ) -> DomainResult<bool> {
+        let peer_public_key = signature::UnparsedPublicKey::new(&signature::ED25519, public_key);
+
         match peer_public_key.verify(message, signature) {
             Ok(_) => Ok(true),
             Err(_) => Ok(false),
@@ -181,8 +196,13 @@ impl CryptoService {
         let mut context = digest::Context::new(&digest::SHA256);
         let mut buffer = [0u8; 8192];
         loop {
-            let count = file.read(&mut buffer).await.map_err(|_| "Failed to read file")?;
-            if count == 0 { break; }
+            let count = file
+                .read(&mut buffer)
+                .await
+                .map_err(|_| "Failed to read file")?;
+            if count == 0 {
+                break;
+            }
             context.update(&buffer[..count]);
         }
         let hash = context.finish();
@@ -191,7 +211,9 @@ impl CryptoService {
 }
 
 impl Default for CryptoService {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 /// Utility service for common file and system operations
@@ -207,7 +229,7 @@ impl UtilityService {
         let mut file = File::open(path).await?;
         let mut context = ring::digest::Context::new(&ring::digest::SHA256);
         let mut buffer = [0u8; 1024 * 64];
-        
+
         loop {
             let count = file.read(&mut buffer).await?;
             if count == 0 {
@@ -215,7 +237,7 @@ impl UtilityService {
             }
             context.update(&buffer[..count]);
         }
-        
+
         let digest = context.finish();
         Ok(hex::encode(digest.as_ref()))
     }
@@ -238,12 +260,12 @@ impl UtilityService {
         let units = ["B", "KB", "MB", "GB", "TB"];
         let mut size = size as f64;
         let mut unit_index = 0;
-        
+
         while size >= 1024.0 && unit_index < units.len() - 1 {
             size /= 1024.0;
             unit_index += 1;
         }
-        
+
         if unit_index == 0 {
             format!("{} {}", size as u64, units[unit_index])
         } else {
@@ -279,8 +301,10 @@ impl UtilityService {
         }
         Ok(())
     }
-} 
+}
 
 impl Default for UtilityService {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }

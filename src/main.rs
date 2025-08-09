@@ -1,18 +1,18 @@
 use clap::{Parser, Subcommand};
-use tracing::{info, error};
-use std::path::PathBuf;
 use std::error::Error;
+use std::path::PathBuf;
 use std::time::Duration;
+use tracing::{error, info};
 
 // Added for tracing file logging
-use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt, Layer};
 use tracing_appender::non_blocking::WorkerGuard;
+use tracing_subscriber::{EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 // Use new modular structure
 use cipherstream::{
-    infrastructure::{AppConfig, LibP2pNetworkService, CryptoService, InMemoryEventPublisher},
     application::ApplicationService,
     core::{domain::PeerId, traits::NetworkService},
+    infrastructure::{AppConfig, CryptoService, InMemoryEventPublisher, LibP2pNetworkService},
 };
 
 #[derive(Parser)]
@@ -32,7 +32,7 @@ enum Commands {
         /// Optional port to listen on
         #[arg(short, long, default_value_t = 8000)]
         port: u16,
-        
+
         /// Optional data directory for storing node data
         #[arg(long, default_value = ".cipherstream")]
         data_dir: String,
@@ -42,7 +42,7 @@ enum Commands {
         /// Path to the file to send
         #[arg(short, long)]
         file: PathBuf,
-        
+
         /// Peer ID to send to
         #[arg(short, long)]
         peer: String,
@@ -81,11 +81,21 @@ fn init_logging(log_file_prefix: &str, quiet: bool) -> Result<WorkerGuard, Box<d
     let (non_blocking_appender, guard) = tracing_appender::non_blocking(file_appender);
 
     // File format (text or json)
-    let file_json = std::env::var("CIPHERSTREAM_LOG_FILE_FORMAT").ok().as_deref() == Some("json");
+    let file_json = std::env::var("CIPHERSTREAM_LOG_FILE_FORMAT")
+        .ok()
+        .as_deref()
+        == Some("json");
     let file_layer = if file_json {
-        fmt::layer().json().with_writer(non_blocking_appender).with_ansi(false).boxed()
+        fmt::layer()
+            .json()
+            .with_writer(non_blocking_appender)
+            .with_ansi(false)
+            .boxed()
     } else {
-        fmt::layer().with_writer(non_blocking_appender).with_ansi(false).boxed()
+        fmt::layer()
+            .with_writer(non_blocking_appender)
+            .with_ansi(false)
+            .boxed()
     };
 
     let console_json = std::env::var("CIPHERSTREAM_LOG_FORMAT").ok().as_deref() == Some("json");
@@ -127,11 +137,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Determine log file prefix based on command (basic example)
     // This guard needs to stay in scope, otherwise logs stop writing.
     let _guard = init_logging("cipherstream_node", cli.quiet)?;
-    
+
     match cli.command {
         Commands::Start { port, data_dir } => {
             info!("Starting node on port {}...", port);
-            
+
             // Create application configuration
             let config = AppConfig {
                 default_port: port,
@@ -139,28 +149,33 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 download_directory: format!("{}/downloads", data_dir),
                 ..AppConfig::default()
             };
-            
+
             // Initialize application service
             let app_service = ApplicationService::new(config.clone()).await?;
-            info!("Using data directory: {}", app_service.config().data_directory);
-            
+            info!(
+                "Using data directory: {}",
+                app_service.config().data_directory
+            );
+
             // Initialize event publisher
             let event_publisher = std::sync::Arc::new(InMemoryEventPublisher::new());
-            
+
             // Initialize libp2p network service
-            let network_service = LibP2pNetworkService::new(
-                std::sync::Arc::new(config),
-                event_publisher
-            ).await.map_err(|e| format!("Failed to create network service: {}", e))?;
-            
+            let network_service =
+                LibP2pNetworkService::new(std::sync::Arc::new(config), event_publisher)
+                    .await
+                    .map_err(|e| format!("Failed to create network service: {}", e))?;
+
             let peer_id = network_service.local_peer_id();
             info!("Local peer id: {}", peer_id);
-            
+
             // Start the network service
-            network_service.start_listening(port).await
+            network_service
+                .start_listening(port)
+                .await
                 .map_err(|e| format!("Failed to start listening: {}", e))?;
             info!("Node started on port {}", port);
-            
+
             // Keep the process running
             loop {
                 tokio::time::sleep(std::time::Duration::from_secs(60)).await;
@@ -172,49 +187,61 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 error!("File does not exist: {:?}", file);
                 return Err("File not found".into());
             }
-            
+
             // Parse peer ID using new modular structure
             let peer_id = PeerId::from_string(peer);
-            
+
             info!("File transfer functionality will be implemented with new modular architecture");
             info!("Target peer: {}", peer_id.as_str());
             info!("File: {:?}", file);
-            
+
             // Generate hash of file using new crypto service
-            let file_hash = CryptoService::compute_file_hash(&file).await
+            let file_hash = CryptoService::compute_file_hash(&file)
+                .await
                 .map_err(|e| format!("Failed to compute file hash: {}", e))?;
             info!("File hash: {}", file_hash);
-            
-            println!("File transfer command prepared (implementation pending with new architecture).");
+
+            println!(
+                "File transfer command prepared (implementation pending with new architecture)."
+            );
         }
         Commands::Connect { peer } => {
             // Parse peer ID using new structure
             let peer_id = PeerId::from_string(peer);
-            
+
             info!("Connecting to peer: {}", peer_id.as_str());
             println!("Connection functionality will be implemented with new modular architecture.");
         }
         Commands::Peers => {
             info!("Listing peers...");
-            
+
             // In the new architecture, peer discovery would be done through the running network service
             // For now, we'll show a message about how to use the new system
             println!("Peer discovery is available when the node is running.");
             println!("To see connected peers, start a node with: cargo run -- start --port 8000");
-            println!("The node will automatically discover and connect to other peers in the network.");
+            println!(
+                "The node will automatically discover and connect to other peers in the network."
+            );
         }
-        Commands::Discover { duration_secs, port } => {
-            info!("Discovering peers for {} seconds on port {}...", duration_secs, port);
+        Commands::Discover {
+            duration_secs,
+            port,
+        } => {
+            info!(
+                "Discovering peers for {} seconds on port {}...",
+                duration_secs, port
+            );
 
             // Minimal ephemeral setup to leverage the network service
-            let config = AppConfig { default_port: port, ..AppConfig::default() };
+            let config = AppConfig {
+                default_port: port,
+                ..AppConfig::default()
+            };
             let event_publisher = std::sync::Arc::new(InMemoryEventPublisher::new());
-            let network_service = LibP2pNetworkService::new(
-                std::sync::Arc::new(config),
-                event_publisher,
-            )
-            .await
-            .map_err(|e| format!("Failed to create network service: {}", e))?;
+            let network_service =
+                LibP2pNetworkService::new(std::sync::Arc::new(config), event_publisher)
+                    .await
+                    .map_err(|e| format!("Failed to create network service: {}", e))?;
 
             network_service
                 .start_listening(port)
@@ -234,19 +261,29 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     cipherstream::infrastructure::network::NetworkEvent::PeerDisconnected(pid) => {
                         println!("Peer disconnected: {}", pid);
                     }
-                    cipherstream::infrastructure::network::NetworkEvent::GossipMessage { from, topic, .. } => {
+                    cipherstream::infrastructure::network::NetworkEvent::GossipMessage {
+                        from,
+                        topic,
+                        ..
+                    } => {
                         println!("Gossip message from {} on topic {}", from, topic);
                     }
-                    cipherstream::infrastructure::network::NetworkEvent::FileTransferRequest { from, .. } => {
+                    cipherstream::infrastructure::network::NetworkEvent::FileTransferRequest {
+                        from,
+                        ..
+                    } => {
                         println!("File transfer request from {}", from);
                     }
-                    cipherstream::infrastructure::network::NetworkEvent::FileTransferResponse { from, .. } => {
+                    cipherstream::infrastructure::network::NetworkEvent::FileTransferResponse {
+                        from,
+                        ..
+                    } => {
                         println!("File transfer response from {}", from);
                     }
                 }
             }
         }
     }
-    
+
     Ok(())
 }

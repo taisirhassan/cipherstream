@@ -1,5 +1,5 @@
+use crate::core::{domain::*, services::*, traits::*};
 use std::sync::Arc;
-use crate::core::{domain::*, traits::*, services::*};
 
 /// Use case for sending a file to another peer
 pub struct SendFileUseCase {
@@ -153,4 +153,4 @@ impl UseCases {
             cancel_transfer: CancelTransferUseCase::new(transfer_service),
         }
     }
-} 
+}
