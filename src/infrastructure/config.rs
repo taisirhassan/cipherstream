@@ -75,12 +75,11 @@ impl Default for AppConfig {
 impl AppConfig {
     /// Load configuration from file or create default
     pub fn load_or_default(config_path: Option<&str>) -> Self {
-        if let Some(path) = config_path {
-            if let Ok(content) = std::fs::read_to_string(path) {
-                if let Ok(config) = serde_json::from_str(&content) {
-                    return config;
-                }
-            }
+        if let Some(config) = config_path
+            .and_then(|path| std::fs::read_to_string(path).ok())
+            .and_then(|content| serde_json::from_str(&content).ok())
+        {
+            return config;
         }
         Self::default()
     }

@@ -146,8 +146,8 @@ impl LibP2pNetworkService {
             "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
         ];
 
-        for addr in &bootstrap_peers {
-            if let Ok(addr) = addr.parse::<Multiaddr>() {
+        for addr_str in &bootstrap_peers {
+            if let Ok(addr) = addr_str.parse::<Multiaddr>() {
                 if let Some(peer_id) = addr.iter().find_map(|p| {
                     if let libp2p::multiaddr::Protocol::P2p(peer_id) = p {
                         Some(peer_id)
@@ -234,12 +234,12 @@ impl LibP2pNetworkService {
                     // Trigger Kademlia bootstrap once we start listening
                     if !bootstrap_attempted {
                         if let SwarmEvent::NewListenAddr { .. } = event {
-                            if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
-                                warn!("Kademlia bootstrap failed: {:?}", e);
-                            } else {
-                                info!("Kademlia bootstrap initiated successfully");
-                                bootstrap_attempted = true;
-                            }
+                        if let Err(e) = swarm.behaviour_mut().kademlia.bootstrap() {
+                            warn!("Kademlia bootstrap failed: {:?}", e);
+                        } else {
+                            info!("Kademlia bootstrap initiated successfully");
+                            bootstrap_attempted = true;
+                        }
                         }
                     }
 
