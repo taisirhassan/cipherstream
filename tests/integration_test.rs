@@ -202,15 +202,14 @@ fn start_node(data_dir: &str) -> TestNode {
                 println!("[Node]: {}", line);
 
                 // Extract peer ID from the log line
-                if line.contains("Local peer id:") {
-                    if let Some(id) = line
-                        .split("Local peer id:")
+                if let (true, Some(id)) = (
+                    line.contains("Local peer id:"),
+                    line.split("Local peer id:")
                         .nth(1)
-                        .map(|s| s.trim().to_string())
-                    {
-                        let mut lock = handler_clone.lock().unwrap();
-                        *lock = Some(id);
-                    }
+                        .map(|s| s.trim().to_string()),
+                ) {
+                    let mut lock = handler_clone.lock().unwrap();
+                    *lock = Some(id);
                 }
             }
         });
