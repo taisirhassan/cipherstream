@@ -1,0 +1,120 @@
+2025-08-09T05:07:36.219584Z  INFO cipherstream: Starting node on port 10000...
+2025-08-09T05:07:36.221111Z  INFO cipherstream: Using data directory: test_data/node2_1754716055
+2025-08-09T05:07:36.222900Z  INFO cipherstream::infrastructure::network: Local peer id: 12D3KooWLfVrNVNLGH9yJ2bz28JLTm26RJKMcdEf2wXLjXdbMkva
+2025-08-09T05:07:36.228687Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2025-08-09T05:07:36.228769Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2025-08-09T05:07:36.228833Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmbLHAnMoJPWSCR5Zp7y9BDkkFBhYZyEjhY5bGHxpmmk9N
+2025-08-09T05:07:36.228932Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2025-08-09T05:07:36.230764Z  INFO cipherstream: Local peer id: 12D3KooWLfVrNVNLGH9yJ2bz28JLTm26RJKMcdEf2wXLjXdbMkva
+2025-08-09T05:07:36.230945Z  INFO cipherstream: Node started on port 10000
+2025-08-09T05:07:36.232209Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
+2025-08-09T05:07:36.233416Z  INFO cipherstream::infrastructure::network: Network service started on /ip4/0.0.0.0/tcp/10000
+2025-08-09T05:07:36.234922Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap initiated successfully
+2025-08-09T05:07:36.234933Z  INFO cipherstream::infrastructure::network: Listening on /ip4/127.0.0.1/tcp/10000
+2025-08-09T05:07:36.235377Z  INFO cipherstream::infrastructure::network: Listening on /ip4/192.168.2.110/tcp/10000
+2025-08-09T05:07:36.522156Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:07:36.894736Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:07:37.508659Z  INFO cipherstream: Starting node on port 10001...
+2025-08-09T05:07:37.510137Z  INFO cipherstream: Using data directory: test_data/node1_1754716055
+2025-08-09T05:07:37.511925Z  INFO cipherstream::infrastructure::network: Local peer id: 12D3KooWGc7jSw1LsvfvjXxAFXHTJ5H4WDHm9xzQb3FqYWSvJRjA
+2025-08-09T05:07:37.517751Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2025-08-09T05:07:37.517840Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2025-08-09T05:07:37.517907Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmbLHAnMoJPWSCR5Zp7y9BDkkFBhYZyEjhY5bGHxpmmk9N
+2025-08-09T05:07:37.518008Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2025-08-09T05:07:37.519900Z  INFO cipherstream: Local peer id: 12D3KooWGc7jSw1LsvfvjXxAFXHTJ5H4WDHm9xzQb3FqYWSvJRjA
+2025-08-09T05:07:37.520031Z  INFO cipherstream: Node started on port 10001
+2025-08-09T05:07:37.521407Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
+2025-08-09T05:07:37.522841Z  INFO cipherstream::infrastructure::network: Network service started on /ip4/0.0.0.0/tcp/10001
+2025-08-09T05:07:37.524532Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap initiated successfully
+2025-08-09T05:07:37.524549Z  INFO cipherstream::infrastructure::network: Listening on /ip4/127.0.0.1/tcp/10001
+2025-08-09T05:07:37.525140Z  INFO cipherstream::infrastructure::network: Listening on /ip4/192.168.2.110/tcp/10001
+2025-08-09T05:07:37.526833Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWGc7jSw1LsvfvjXxAFXHTJ5H4WDHm9xzQb3FqYWSvJRjA address=/ip4/192.168.2.110/tcp/10001/p2p/12D3KooWGc7jSw1LsvfvjXxAFXHTJ5H4WDHm9xzQb3FqYWSvJRjA
+2025-08-09T05:07:37.526952Z  INFO cipherstream::infrastructure::network: mDNS discovered peer: 12D3KooWGc7jSw1LsvfvjXxAFXHTJ5H4WDHm9xzQb3FqYWSvJRjA
+2025-08-09T05:07:37.526861Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWLfVrNVNLGH9yJ2bz28JLTm26RJKMcdEf2wXLjXdbMkva address=/ip4/192.168.2.110/tcp/10000/p2p/12D3KooWLfVrNVNLGH9yJ2bz28JLTm26RJKMcdEf2wXLjXdbMkva
+2025-08-09T05:07:37.527041Z  INFO cipherstream::infrastructure::network: mDNS discovered peer: 12D3KooWLfVrNVNLGH9yJ2bz28JLTm26RJKMcdEf2wXLjXdbMkva
+2025-08-09T05:07:37.897177Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:07:38.208282Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:07:49.035622Z  INFO cipherstream: File transfer functionality will be implemented with new modular architecture
+2025-08-09T05:07:49.035981Z  INFO cipherstream: Target peer: 12D3KooWLfVrNVNLGH9yJ2bz28JLTm26RJKMcdEf2wXLjXdbMkva
+2025-08-09T05:07:49.036264Z  INFO cipherstream: File: "test_file.txt"
+2025-08-09T05:07:49.038269Z  INFO cipherstream: File hash: 262c4d84e4796cf8aff7d2f5b6dd4e531d14c431493938cf2a75f5b02e21c321
+2025-08-09T05:09:39.599315Z  INFO cipherstream: Starting node on port 10000...
+2025-08-09T05:09:39.601003Z  INFO cipherstream: Using data directory: test_data/node2_1754716179
+2025-08-09T05:09:39.602910Z  INFO cipherstream::infrastructure::network: Local peer id: 12D3KooWDy4mSL7pPZrcD9fdMGwjDXZ7aBubR9GVRNsJnXVpzTwG
+2025-08-09T05:09:39.610392Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2025-08-09T05:09:39.610497Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2025-08-09T05:09:39.610568Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmbLHAnMoJPWSCR5Zp7y9BDkkFBhYZyEjhY5bGHxpmmk9N
+2025-08-09T05:09:39.610663Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2025-08-09T05:09:39.613241Z  INFO cipherstream: Local peer id: 12D3KooWDy4mSL7pPZrcD9fdMGwjDXZ7aBubR9GVRNsJnXVpzTwG
+2025-08-09T05:09:39.613409Z  INFO cipherstream: Node started on port 10000
+2025-08-09T05:09:39.614874Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
+2025-08-09T05:09:39.616369Z  INFO cipherstream::infrastructure::network: Network service started on /ip4/0.0.0.0/tcp/10000
+2025-08-09T05:09:39.618155Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap initiated successfully
+2025-08-09T05:09:39.618166Z  INFO cipherstream::infrastructure::network: Listening on /ip4/127.0.0.1/tcp/10000
+2025-08-09T05:09:39.618723Z  INFO cipherstream::infrastructure::network: Listening on /ip4/192.168.2.110/tcp/10000
+2025-08-09T05:09:40.208854Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:09:40.214551Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:09:40.945049Z  INFO cipherstream: Starting node on port 10001...
+2025-08-09T05:09:40.946928Z  INFO cipherstream: Using data directory: test_data/node1_1754716179
+2025-08-09T05:09:40.948768Z  INFO cipherstream::infrastructure::network: Local peer id: 12D3KooWMaHvCYkghG8m1nGfoWQ5XFWfsVXTn2hfeykkkn6tco8D
+2025-08-09T05:09:40.956412Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2025-08-09T05:09:40.956519Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2025-08-09T05:09:40.956596Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmbLHAnMoJPWSCR5Zp7y9BDkkFBhYZyEjhY5bGHxpmmk9N
+2025-08-09T05:09:40.956704Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2025-08-09T05:09:40.958681Z  INFO cipherstream: Local peer id: 12D3KooWMaHvCYkghG8m1nGfoWQ5XFWfsVXTn2hfeykkkn6tco8D
+2025-08-09T05:09:40.958829Z  INFO cipherstream: Node started on port 10001
+2025-08-09T05:09:40.960382Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
+2025-08-09T05:09:40.961889Z  INFO cipherstream::infrastructure::network: Network service started on /ip4/0.0.0.0/tcp/10001
+2025-08-09T05:09:40.963912Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap initiated successfully
+2025-08-09T05:09:40.963941Z  INFO cipherstream::infrastructure::network: Listening on /ip4/127.0.0.1/tcp/10001
+2025-08-09T05:09:40.964827Z  INFO cipherstream::infrastructure::network: Listening on /ip4/192.168.2.110/tcp/10001
+2025-08-09T05:09:40.966569Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWDy4mSL7pPZrcD9fdMGwjDXZ7aBubR9GVRNsJnXVpzTwG address=/ip4/192.168.2.110/tcp/10000/p2p/12D3KooWDy4mSL7pPZrcD9fdMGwjDXZ7aBubR9GVRNsJnXVpzTwG
+2025-08-09T05:09:40.966573Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWMaHvCYkghG8m1nGfoWQ5XFWfsVXTn2hfeykkkn6tco8D address=/ip4/192.168.2.110/tcp/10001/p2p/12D3KooWMaHvCYkghG8m1nGfoWQ5XFWfsVXTn2hfeykkkn6tco8D
+2025-08-09T05:09:40.966629Z  INFO cipherstream::infrastructure::network: mDNS discovered peer: 12D3KooWDy4mSL7pPZrcD9fdMGwjDXZ7aBubR9GVRNsJnXVpzTwG
+2025-08-09T05:09:40.966648Z  INFO cipherstream::infrastructure::network: mDNS discovered peer: 12D3KooWMaHvCYkghG8m1nGfoWQ5XFWfsVXTn2hfeykkkn6tco8D
+2025-08-09T05:09:41.749861Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:09:41.752353Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:09:52.452349Z  INFO cipherstream: File transfer functionality will be implemented with new modular architecture
+2025-08-09T05:09:52.452867Z  INFO cipherstream: Target peer: 12D3KooWDy4mSL7pPZrcD9fdMGwjDXZ7aBubR9GVRNsJnXVpzTwG
+2025-08-09T05:09:52.453011Z  INFO cipherstream: File: "test_file.txt"
+2025-08-09T05:09:52.455170Z  INFO cipherstream: File hash: 262c4d84e4796cf8aff7d2f5b6dd4e531d14c431493938cf2a75f5b02e21c321
+2025-08-09T05:11:15.990751Z  INFO cipherstream: Starting node on port 10000...
+2025-08-09T05:11:15.992455Z  INFO cipherstream: Using data directory: test_data/node2_1754716275
+2025-08-09T05:11:15.994066Z  INFO cipherstream::infrastructure::network: Local peer id: 12D3KooWGEx5mFqwbb19REnvnPpL116TnT9GFFEsTqaSvR9vNSas
+2025-08-09T05:11:16.000937Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2025-08-09T05:11:16.001030Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2025-08-09T05:11:16.001102Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmbLHAnMoJPWSCR5Zp7y9BDkkFBhYZyEjhY5bGHxpmmk9N
+2025-08-09T05:11:16.001203Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2025-08-09T05:11:16.003265Z  INFO cipherstream: Local peer id: 12D3KooWGEx5mFqwbb19REnvnPpL116TnT9GFFEsTqaSvR9vNSas
+2025-08-09T05:11:16.003405Z  INFO cipherstream: Node started on port 10000
+2025-08-09T05:11:16.004770Z  INFO cipherstream::infrastructure::network: Network service started on /ip4/0.0.0.0/tcp/10000
+2025-08-09T05:11:16.005841Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
+2025-08-09T05:11:16.008350Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap initiated successfully
+2025-08-09T05:11:16.008361Z  INFO cipherstream::infrastructure::network: Listening on /ip4/127.0.0.1/tcp/10000
+2025-08-09T05:11:16.008755Z  INFO cipherstream::infrastructure::network: Listening on /ip4/192.168.2.110/tcp/10000
+2025-08-09T05:11:16.442162Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:11:16.516879Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:11:17.608186Z  INFO cipherstream: Starting node on port 10001...
+2025-08-09T05:11:17.609896Z  INFO cipherstream: Using data directory: test_data/node1_1754716275
+2025-08-09T05:11:17.611498Z  INFO cipherstream::infrastructure::network: Local peer id: 12D3KooWMAvUH6eVZfo9GHAiAjU3saXtsb9w4GFNLTPiXNi8mBit
+2025-08-09T05:11:17.618133Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN
+2025-08-09T05:11:17.618235Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa
+2025-08-09T05:11:17.618305Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmbLHAnMoJPWSCR5Zp7y9BDkkFBhYZyEjhY5bGHxpmmk9N
+2025-08-09T05:11:17.618410Z  INFO cipherstream::infrastructure::network: Added Kademlia bootstrap peer: QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ
+2025-08-09T05:11:17.621330Z  INFO cipherstream: Local peer id: 12D3KooWMAvUH6eVZfo9GHAiAjU3saXtsb9w4GFNLTPiXNi8mBit
+2025-08-09T05:11:17.621481Z  INFO cipherstream: Node started on port 10001
+2025-08-09T05:11:17.622735Z  INFO cipherstream::infrastructure::network: Network service started on /ip4/0.0.0.0/tcp/10001
+2025-08-09T05:11:17.623919Z  INFO libp2p_mdns::behaviour::iface: creating instance on iface address address=192.168.2.110
+2025-08-09T05:11:17.626687Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap initiated successfully
+2025-08-09T05:11:17.626700Z  INFO cipherstream::infrastructure::network: Listening on /ip4/127.0.0.1/tcp/10001
+2025-08-09T05:11:17.627240Z  INFO cipherstream::infrastructure::network: Listening on /ip4/192.168.2.110/tcp/10001
+2025-08-09T05:11:17.629112Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWGEx5mFqwbb19REnvnPpL116TnT9GFFEsTqaSvR9vNSas address=/ip4/192.168.2.110/tcp/10000/p2p/12D3KooWGEx5mFqwbb19REnvnPpL116TnT9GFFEsTqaSvR9vNSas
+2025-08-09T05:11:17.629101Z  INFO libp2p_mdns::behaviour: discovered peer on address peer=12D3KooWMAvUH6eVZfo9GHAiAjU3saXtsb9w4GFNLTPiXNi8mBit address=/ip4/192.168.2.110/tcp/10001/p2p/12D3KooWMAvUH6eVZfo9GHAiAjU3saXtsb9w4GFNLTPiXNi8mBit
+2025-08-09T05:11:17.629178Z  INFO cipherstream::infrastructure::network: mDNS discovered peer: 12D3KooWGEx5mFqwbb19REnvnPpL116TnT9GFFEsTqaSvR9vNSas
+2025-08-09T05:11:17.629197Z  INFO cipherstream::infrastructure::network: mDNS discovered peer: 12D3KooWMAvUH6eVZfo9GHAiAjU3saXtsb9w4GFNLTPiXNi8mBit
+2025-08-09T05:11:17.768536Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:11:18.279010Z  INFO cipherstream::infrastructure::network: Kademlia bootstrap complete - connected to DHT network
+2025-08-09T05:11:29.014959Z  INFO cipherstream: File transfer functionality will be implemented with new modular architecture
+2025-08-09T05:11:29.015340Z  INFO cipherstream: Target peer: 12D3KooWGEx5mFqwbb19REnvnPpL116TnT9GFFEsTqaSvR9vNSas
+2025-08-09T05:11:29.015495Z  INFO cipherstream: File: "test_file.txt"
+2025-08-09T05:11:29.017381Z  INFO cipherstream: File hash: 262c4d84e4796cf8aff7d2f5b6dd4e531d14c431493938cf2a75f5b02e21c321
